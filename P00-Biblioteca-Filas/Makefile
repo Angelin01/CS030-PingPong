@@ -1,6 +1,6 @@
 # Code stuffs
 INCL = queue.h
-EXE = testefila
+EXE = testafila
 CFILES = queue.c testafila.c
 OBJS = $(CFILES:.c=.o)
 LIBS =
