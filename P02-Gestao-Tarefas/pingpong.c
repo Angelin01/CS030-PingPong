@@ -37,3 +37,11 @@ int task_create(task_t *task, void (*start_func)(void *), void *arg) {
     #endif
     return (task->tid);
 }
+
+int task_switch (task_t *task) {}
+
+void task_exit(int exitCode) {}
+
+int task_id () {}
+
+
