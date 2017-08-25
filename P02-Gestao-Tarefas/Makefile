@@ -8,9 +8,9 @@ TASKS1 = pingpong-tasks1.c
 TASKS2 = pingpong-tasks2.c
 TASKS3 = pingpong-tasks3.c
 OBJSMAIN = $(MAINC:.c=.o)
-OBJS1 = $(OBJSMAIN) $(TASKS1:.c=.0)
-OBJS2 = $(OBJSMAIN) $(TASKS2:.c=.0)
-OBJS3 = $(OBJSMAIN) $(TASKS3:.c=.0)
+OBJS1 = $(OBJSMAIN) $(TASKS1:.c=.o)
+OBJS2 = $(OBJSMAIN) $(TASKS2:.c=.o)
+OBJS3 = $(OBJSMAIN) $(TASKS3:.c=.o)
 LIBS =
 
 # Compiler stuffs
@@ -39,15 +39,15 @@ $(EXE3): $(OBJS3)
 	$(GCC) -o $(EXE3) $(LIBPATH) $(OBJS3)
 
 # Debug executable 1
-debug:
+debug1:
 	$(GCC) $(DEBUGFLAGS) $(MAINC) $(TASKS1) -o $(EXE1)_debug
 	
 # Debug executable 2
-debug:
+debug2:
 	$(GCC) $(DEBUGFLAGS) $(MAINC) $(TASKS2) -o $(EXE2)_debug
 	
 # Debug executable 3
-debug:
+debug3:
 	$(GCC) $(DEBUGFLAGS) $(MAINC) $(TASKS3) -o $(EXE3)_debug
 
 # Clean
