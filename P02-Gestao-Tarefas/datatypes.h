@@ -18,7 +18,7 @@ typedef struct task_t {
     struct task_t* next;
 
     // Para tarefa em si
-    static int idcounter = 1;
+    static int idcounter;
     int tid;
     ucontext_t* tContext;
     ucontext_t* mainContext;

@@ -1,16 +1,19 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include <ucontext.h>
 #include "pingpong.h"
 #include "datatypes.h"
 
-#DEFINE ERRSTACK -1
+#define ERRSTACK -1
+
+int idcounter = 1;
 
 void pingpong_init() {
     setvbuf(stdout, 0, _IONBF, 0);
 }
 
 int task_create(task_t *task, void (*start_func)(void *), void *arg) {
-    task->id = task->idcounter++;
+    task->tid = idcounter++;
     getcontext(task->tContext);
     getcontext(task->mainContext);
 
@@ -32,5 +35,5 @@ int task_create(task_t *task, void (*start_func)(void *), void *arg) {
     #ifdef DEBUG
     printf("task_create: criou tarefa %d", task->id);
     #endif
-    return (task->id);
+    return (task->tid);
 }
