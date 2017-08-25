@@ -20,10 +20,10 @@ int task_create(task_t *task, void (*start_func)(void *), void *arg) {
     // Alocando stack
     task->stack = malloc(sizeof(char) * SIZESTACK);
     if(task->stack) {
-        task->tContext.uc_stack.ss_sp = task->stack;
-        task->tContext.uc_stack.ss_size = STACKSIZE;
-        task->tContext.uc_stack.ss_flags = 0;
-        task->tContext.uc_link = 0;
+        task->tContext->uc_stack.ss_sp = task->stack;
+        task->tContext->uc_stack.ss_size = SIZESTACK;
+        task->tContext->uc_stack.ss_flags = 0;
+        task->tContext->uc_link = 0;
     }
     else {
         perror("Erro em task_create na criacao da stack: ");
