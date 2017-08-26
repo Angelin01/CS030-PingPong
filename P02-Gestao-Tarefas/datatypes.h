@@ -17,11 +17,13 @@ typedef struct task_t {
     struct task_t* prev;
     struct task_t* next;
 
+    // Para voltar pro main
+    struct task_t* tmain;
+
     // Para tarefa em si
     // static int idcounter;
     int tid;
-    ucontext_t* tContext;
-    ucontext_t* mainContext;
+    ucontext_t tContext;
     char* stack;
 
 } task_t ;
