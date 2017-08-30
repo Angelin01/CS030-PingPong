@@ -102,7 +102,6 @@ void task_exit(int exitCode) {
     else { // Ou tarefas normais
         currentTask = dispatcher;
         toFree = tempTask;
-        queue_remove((queue_t**)&taskQueue, (queue_t*)tempTask);
         swapcontext(&(tempTask->tContext), &(dispatcher->tContext));
     }
 
@@ -117,7 +116,6 @@ int task_id() {
 /*      Dispatcher      */
 /* -------------------- */
 
-// Implementar
 task_t* scheduler() {
     return(taskQueue);
 }
@@ -128,6 +126,7 @@ void dispatcher_body() {
     while(queue_size((queue_t*)taskQueue) > 0) {
         next = scheduler();
         if(next) {
+            queue_remove((queue_t**)&taskQueue, (queue_t*)next);
             task_switch(next);
             if(toFree) { // Se a task deu exit, precisa desalocar a stack
                 free(toFree->stack);
@@ -142,7 +141,7 @@ void dispatcher_body() {
 
 void task_yield() {
     if(currentTask != &mainTask) {
-        queue_append((queue_t**)&taskQueue, queue_remove((queue_t**)&taskQueue, (queue_t*)currentTask));
+        queue_append((queue_t**)&taskQueue, (queue_t*)currentTask);
     }
     task_switch(dispatcher);
 }
