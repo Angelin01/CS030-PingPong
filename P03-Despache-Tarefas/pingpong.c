@@ -15,6 +15,8 @@ task_t* dispatcher;
 task_t** taskQueue;
 task_t* toFree;
 
+void dispatcher_body();
+
 void pingpong_init() {
     #ifdef DEBUG
     printf("Inicializando pingpong\n");
@@ -104,6 +106,11 @@ int task_id() {
 /*      Dispatcher      */
 /* -------------------- */
 
+// Implementar
+task_t* scheduler() {
+
+}
+
 void dispatcher_body() {
     task_t* next;
 
@@ -121,19 +128,13 @@ void dispatcher_body() {
     task_exit(0);
 }
 
-// Implementar
 void task_yield() {
-    queue_append((queue_t**)taskQueue, queue_remove((queue_t**)taskQueue, (queue_t*)currentTask)));
+    queue_append((queue_t**)taskQueue, queue_remove((queue_t**)taskQueue, (queue_t*)currentTask));
     task_switch(dispatcher);
 }
 
 // Implementar
-task_t* scheduler() {
-
-}
+void task_suspend(task_t *task, task_t **queue) {}
 
 // Implementar
-void task_suspend() {}
-
-// Implementar
-void task_resume() {}
+void task_resume(task_t *task) {}
