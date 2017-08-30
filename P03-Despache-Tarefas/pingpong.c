@@ -12,7 +12,7 @@ long idcounter = 1;
 task_t mainTask;
 task_t* currentTask;
 task_t* dispatcher;
-task_t** taskQueue;
+task_t* taskQueue;
 task_t* toFree;
 
 void dispatcher_body();
@@ -36,14 +36,13 @@ void pingpong_init() {
     mainTask.tContext.uc_link = 0;
 
     getcontext(&(mainTask.tContext));
+    currentTask = &mainTask;
 
     // Aloca dispatcher
     dispatcher = malloc(sizeof(task_t));
     // Cria o dispatcher
     task_create(dispatcher, dispatcher_body, NULL);
-    // Troca para o dispatcher
-    task_switch(dispatcher);
-
+    queue_remove((queue_t**)&taskQueue, (queue_t*)dispatcher);
 }
 
 int task_create(task_t *task, void (*start_func)(void *), void *arg) {
@@ -72,8 +71,10 @@ int task_create(task_t *task, void (*start_func)(void *), void *arg) {
         makecontext(&(task->tContext), (void*) start_func, 0);
     }
 
+    queue_append((queue_t**)&taskQueue, (queue_t*)task);
+
     #ifdef DEBUG
-    printf("task_create: criou tarefa %d\n", task->tid);
+    printf("task_create: criou task %d\n", task->tid);
     #endif
     return (task->tid);
 }
@@ -93,9 +94,17 @@ void task_exit(int exitCode) {
     printf("task_exit: encerrando task %d\n", currentTask->tid);
     #endif
     task_t* tempTask = currentTask;
-    currentTask = &mainTask;
-    toFree = tempTask;
-    swapcontext(&(tempTask->tContext), &(mainTask.tContext));
+    /* Isso parece meio porco, procurar solucao melhor */
+    if(currentTask == dispatcher) { // Para distinguir se quem esta saindo eh o dispatcher
+        currentTask = &mainTask;
+        swapcontext(&(tempTask->tContext), &(mainTask.tContext));
+    }
+    else { // Ou tarefas normais
+        currentTask = dispatcher;
+        toFree = tempTask;
+        queue_remove((queue_t**)&taskQueue, (queue_t*)tempTask);
+        swapcontext(&(tempTask->tContext), &(dispatcher->tContext));
+    }
 
     return;
 }
@@ -110,13 +119,13 @@ int task_id() {
 
 // Implementar
 task_t* scheduler() {
-    return(*taskQueue);
+    return(taskQueue);
 }
 
 void dispatcher_body() {
     task_t* next;
 
-    while(queue_size((queue_t*)*taskQueue) > 0) {
+    while(queue_size((queue_t*)taskQueue) > 0) {
         next = scheduler();
         if(next) {
             task_switch(next);
@@ -128,10 +137,13 @@ void dispatcher_body() {
     }
 
     task_exit(0);
+    return;
 }
 
 void task_yield() {
-    queue_append((queue_t**)taskQueue, queue_remove((queue_t**)taskQueue, (queue_t*)currentTask));
+    if(currentTask != &mainTask) {
+        queue_append((queue_t**)&taskQueue, queue_remove((queue_t**)&taskQueue, (queue_t*)currentTask));
+    }
     task_switch(dispatcher);
 }
 
