@@ -11,20 +11,29 @@
 
 #define SIZESTACK 32768
 
+enum state_t {
+    executing = 0,
+    ready,
+    suspended,
+    exited
+};
+
 // Estrutura que define uma tarefa
 typedef struct task_t {
     // Para filas
     struct task_t* prev;
     struct task_t* next;
 
+    struct task_t** currentQueue;
+
     // Para voltar pro main
     struct task_t* tmain;
 
     // Para tarefa em si
-    // static int idcounter;
     int tid;
     ucontext_t tContext;
     char* stack;
+    enum state_t state;
 
 } task_t ;
 

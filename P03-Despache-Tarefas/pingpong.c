@@ -43,6 +43,7 @@ void pingpong_init() {
     // Cria o dispatcher
     task_create(dispatcher, dispatcher_body, NULL);
     queue_remove((queue_t**)&taskQueue, (queue_t*)dispatcher);
+    dispatcher->currentQueue = NULL;
 }
 
 int task_create(task_t *task, void (*start_func)(void *), void *arg) {
@@ -72,6 +73,8 @@ int task_create(task_t *task, void (*start_func)(void *), void *arg) {
     }
 
     queue_append((queue_t**)&taskQueue, (queue_t*)task);
+    task->currentQueue = &taskQueue; // Para suspend no futuro
+    task->state = ready;
 
     #ifdef DEBUG
     printf("task_create: criou task %d\n", task->tid);
@@ -85,6 +88,7 @@ int task_switch(task_t *task) {
     #endif
     task_t* tempTask = currentTask;
     currentTask = task;
+    task->state = executing;
 
     return(swapcontext(&(tempTask->tContext), &(task->tContext)));
 }
@@ -102,6 +106,7 @@ void task_exit(int exitCode) {
     else { // Ou tarefas normais
         currentTask = dispatcher;
         toFree = tempTask;
+        tempTask->state = exited;
         swapcontext(&(tempTask->tContext), &(dispatcher->tContext));
     }
 }
@@ -125,6 +130,7 @@ void dispatcher_body() {
         next = scheduler(); // NULL se a fila está vazia
         if(next) { // Apenas garantia
             queue_remove((queue_t**)&taskQueue, (queue_t*)next);
+            next->currentQueue = NULL;
             task_switch(next);
             if(toFree) { // Se a task deu exit, precisa desalocar a stack
                 free(toFree->stack);
@@ -139,12 +145,30 @@ void dispatcher_body() {
 void task_yield() {
     if(currentTask != &mainTask) { // main task nao fica na fila
         queue_append((queue_t**)&taskQueue, (queue_t*)currentTask);
+        currentTask->currentQueue = &taskQueue;
     }
+    currentTask->state = ready;
     task_switch(dispatcher);
 }
 
-// Implementar
-void task_suspend(task_t *task, task_t **queue) {}
+// Para o futuro
+void task_suspend(task_t *task, task_t **queue) {
+    task = !task ? currentTask : task; // Se nulo eh task atual
+
+    if(queue) { // Se queue esta setado, remover task da queue
+        queue_append((queue_t**)queue, queue_remove((queue_t**)task->currentQueue, (queue_t*)task));
+        task->currentQueue = queue;
+    }
+    // Task agora esta suspensa
+    task->state = suspended;
+}
 
 // Implementar
-void task_resume(task_t *task) {}
+void task_resume(task_t *task) {
+    if(task->currentQueue) { // Tirar somente se tiver uma queue
+        queue_remove((queue_t**)task->currentQueue, (queue_t*)task);
+    }
+    // Volta a fila normal
+    queue_append((queue_t**)&taskQueue, (queue_t*)task);
+    task->currentQueue = &taskQueue;
+}
