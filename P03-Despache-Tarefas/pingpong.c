@@ -37,8 +37,10 @@ void pingpong_init() {
 
     getcontext(&(mainTask.tContext));
 
-    // Cria e pega ID para o dispatcher
-    dispatcher->tid = task_create(dispatcher, dispatcher_body, NULL);
+    // Aloca dispatcher
+    dispatcher = malloc(sizeof(task_t));
+    // Cria o dispatcher
+    task_create(dispatcher, dispatcher_body, NULL);
     // Troca para o dispatcher
     task_switch(dispatcher);
 
@@ -108,7 +110,7 @@ int task_id() {
 
 // Implementar
 task_t* scheduler() {
-
+    return(*taskQueue);
 }
 
 void dispatcher_body() {
