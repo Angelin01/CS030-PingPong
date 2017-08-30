@@ -12,7 +12,8 @@ long idcounter = 1;
 task_t mainTask;
 task_t* currentTask;
 task_t* dispatcher;
-queue_t** taskQueue;
+task_t** taskQueue;
+task_t* toFree;
 
 void pingpong_init() {
     #ifdef DEBUG
@@ -89,6 +90,7 @@ void task_exit(int exitCode) {
     #endif
     task_t* tempTask = currentTask;
     currentTask = &mainTask;
+    toFree = tempTask;
     swapcontext(&(tempTask->tContext), &(mainTask.tContext));
 
     return;
@@ -98,18 +100,37 @@ int task_id() {
     return(currentTask->tid);
 }
 
-// Dispatcher
+/* -------------------- */
+/*      Dispatcher      */
+/* -------------------- */
 
 void dispatcher_body() {
+    task_t* next;
 
-    // Implementar
+    while(queue_size((queue_t*)*taskQueue) > 0) {
+        next = scheduler();
+        if(next) {
+            task_switch(next);
+            if(toFree) { // Se a task deu exit, precisa desalocar a stack
+                free(toFree->stack);
+                toFree = NULL;
+            }
+        }
+    }
+
+    task_exit(0);
 }
 
 // Implementar
-void task_yield() {}
+void task_yield() {
+    queue_append((queue_t**)taskQueue, queue_remove((queue_t**)taskQueue, (queue_t*)currentTask)));
+    task_switch(dispatcher);
+}
 
 // Implementar
-task_t* scheduler() {}
+task_t* scheduler() {
+
+}
 
 // Implementar
 void task_suspend() {}
