@@ -64,7 +64,7 @@ int task_create(task_t *task, void (*start_func)(void *), void *arg) {
 
     // Seta task principal
     task->tmain = &mainTask;
-    if(arg) {
+    if(arg) { // Chek se tem que passar argumento ou nao
         makecontext(&(task->tContext), (void*) start_func, 1, arg);
     }
     else {
@@ -95,7 +95,7 @@ void task_exit(int exitCode) {
     #endif
     task_t* tempTask = currentTask;
     /* Isso parece meio porco, procurar solucao melhor */
-    if(currentTask == dispatcher) { // Para distinguir se quem esta saindo eh o dispatcher
+    if(currentTask == dispatcher) { // Para distinguir se quem esta saindo eh o dispatcher...
         currentTask = &mainTask;
         swapcontext(&(tempTask->tContext), &(mainTask.tContext));
     }
@@ -104,8 +104,6 @@ void task_exit(int exitCode) {
         toFree = tempTask;
         swapcontext(&(tempTask->tContext), &(dispatcher->tContext));
     }
-
-    return;
 }
 
 int task_id() {
@@ -116,16 +114,16 @@ int task_id() {
 /*      Dispatcher      */
 /* -------------------- */
 
-task_t* scheduler() {
+task_t* scheduler() { // Implementar melhor com prioridades
     return(taskQueue);
 }
 
 void dispatcher_body() {
     task_t* next;
 
-    while(queue_size((queue_t*)taskQueue) > 0) {
-        next = scheduler();
-        if(next) {
+    while(queue_size((queue_t*)taskQueue) > 0) { // Se fila estiver vazia, ACAAABOOOO
+        next = scheduler(); // NULL se a fila está vazia
+        if(next) { // Apenas garantia
             queue_remove((queue_t**)&taskQueue, (queue_t*)next);
             task_switch(next);
             if(toFree) { // Se a task deu exit, precisa desalocar a stack
@@ -136,11 +134,10 @@ void dispatcher_body() {
     }
 
     task_exit(0);
-    return;
 }
 
 void task_yield() {
-    if(currentTask != &mainTask) {
+    if(currentTask != &mainTask) { // main task nao fica na fila
         queue_append((queue_t**)&taskQueue, (queue_t*)currentTask);
     }
     task_switch(dispatcher);
