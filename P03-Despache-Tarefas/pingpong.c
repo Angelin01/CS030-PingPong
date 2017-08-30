@@ -163,7 +163,7 @@ void task_suspend(task_t *task, task_t **queue) {
     task->state = suspended;
 }
 
-// Implementar
+// Para o futuro
 void task_resume(task_t *task) {
     if(task->currentQueue) { // Tirar somente se tiver uma queue
         queue_remove((queue_t**)task->currentQueue, (queue_t*)task);
