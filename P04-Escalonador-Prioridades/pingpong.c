@@ -192,7 +192,10 @@ void task_setprio(task_t *task, int prio) {
     #ifdef DEBUG
     printf("task_setprio: atualizando prioridade da task %d para %d\n", task->tid, prio);
     #endif
-
+    if(prio > 20 || prio < -20) {
+        printf("Erro: prioridades devem ficar entre +20 e -20\n");
+        return;
+    }
     task->staticPrio = prio;
     task->dynamicPrio = prio;
 }
