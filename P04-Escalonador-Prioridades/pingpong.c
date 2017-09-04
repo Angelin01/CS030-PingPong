@@ -122,7 +122,24 @@ int task_id() {
 /* -------------------- */
 
 task_t* scheduler() { // Implementar melhor com prioridades
-    return(taskQueue);
+    if(!taskQueue) { // Nao ha tarefas
+        return(NULL);
+    }
+
+    task_t* highestPriority = taskQueue;
+    task_t* aux = taskQueue;
+
+    do {
+        if(aux->dynamicPrio > -20) { // Envelhece a tarefa se puder
+            aux->dynamicPrio--;
+        }
+        if(aux->dynamicPrio < highestPriority->dynamicPrio) {
+            highestPriority = aux;
+        }
+    } while(aux != taskQueue);
+
+    highestPriority->dynamicPrio = highestPriority->staticPrio; // Reseta a prioridade
+    return(highestPriority);
 }
 
 void dispatcher_body() {
