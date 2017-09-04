@@ -143,6 +143,9 @@ void dispatcher_body() {
 }
 
 void task_yield() {
+    #ifdef DEBUG
+    printf("task_yield: rendendo task %d\n", currentTask->tid);
+    #endif
     if(currentTask != &mainTask) { // main task nao fica na fila
         queue_append((queue_t**)&taskQueue, (queue_t*)currentTask);
         currentTask->currentQueue = &taskQueue;
@@ -155,6 +158,10 @@ void task_yield() {
 void task_suspend(task_t *task, task_t **queue) {
     task = !task ? currentTask : task; // Se nulo eh task atual
 
+    #ifdef DEBUG
+    printf("task_suspend: suspendendo task %d\n", task->tid);
+    #endif
+
     if(queue) { // Se queue esta setado, remover task da queue
         queue_append((queue_t**)queue, queue_remove((queue_t**)task->currentQueue, (queue_t*)task));
         task->currentQueue = queue;
@@ -165,6 +172,9 @@ void task_suspend(task_t *task, task_t **queue) {
 
 // Para o futuro
 void task_resume(task_t *task) {
+    #ifdef DEBUG
+    printf("task_resume: resumindo task %d\n", task->tid);
+    #endif
     if(task->currentQueue) { // Tirar somente se tiver uma queue
         queue_remove((queue_t**)task->currentQueue, (queue_t*)task);
     }
