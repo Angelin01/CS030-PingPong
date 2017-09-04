@@ -35,6 +35,10 @@ typedef struct task_t {
     char* stack;
     enum state_t state;
 
+    // Prioridades
+    int staticPrio;
+    int dynamicPrio;
+
 } task_t ;
 
 // estrutura que define um semáforo

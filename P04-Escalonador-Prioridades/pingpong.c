@@ -75,6 +75,8 @@ int task_create(task_t *task, void (*start_func)(void *), void *arg) {
     queue_append((queue_t**)&taskQueue, (queue_t*)task);
     task->currentQueue = &taskQueue; // Para suspend no futuro
     task->state = ready;
+    task->staticPrio = 0;
+    task->dynamicPrio = 0;
 
     #ifdef DEBUG
     printf("task_create: criou task %d\n", task->tid);
