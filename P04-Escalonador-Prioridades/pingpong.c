@@ -177,10 +177,28 @@ void task_resume(task_t *task) {
     #ifdef DEBUG
     printf("task_resume: resumindo task %d\n", task->tid);
     #endif
+
     if(task->currentQueue) { // Tirar somente se tiver uma queue
         queue_remove((queue_t**)task->currentQueue, (queue_t*)task);
     }
     // Volta a fila normal
     queue_append((queue_t**)&taskQueue, (queue_t*)task);
     task->currentQueue = &taskQueue;
+}
+
+// Prioridades
+void task_setprio(task_t *task, int prio) {
+    task = !task ? currentTask : task; // Se nulo eh task atual
+    #ifdef DEBUG
+    printf("task_setprio: atualizando prioridade da task %d para %d\n", task->tid, prio);
+    #endif
+
+    task->staticPrio = prio;
+    task->dynamicPrio = prio;
+}
+
+int task_getprio(task_t *task) {
+    task = !task ? currentTask : task; // Se nulo eh task atual
+
+    return(task->staticPrio);
 }
