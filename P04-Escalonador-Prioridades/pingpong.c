@@ -136,6 +136,12 @@ task_t* scheduler() { // Implementar melhor com prioridades
         if(aux->dynamicPrio < highestPriority->dynamicPrio) {
             highestPriority = aux;
         }
+        else if(aux->dynamicPrio == highestPriority->dynamicPrio) {
+            if(aux->staticPrio < highestPriority->staticPrio) {
+                highestPriority = aux;
+            }
+        }
+        aux = aux->next;
     } while(aux != taskQueue);
 
     highestPriority->dynamicPrio = highestPriority->staticPrio; // Reseta a prioridade
