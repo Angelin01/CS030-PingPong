@@ -185,10 +185,18 @@ task_t* scheduler() { // Implementar melhor com prioridades
 
 void dispatcher_body() {
     task_t* next;
-
-    while(!taskQueue) { // Se fila estiver vazia, ACAAABOOOO
+    #ifdef DEBUG
+    printf("Ponteiro taskQueue: %d\n", taskQueue);
+    #endif // DEBUG
+    while(taskQueue) { // Se fila estiver vazia, ACAAABOOOO
+        #ifdef DEBUG
+        printf("Entrou dispatcher 1");
+        #endif // DEBUG
         next = scheduler(); // NULL se a fila está vazia
         if(next) { // Apenas garantia
+            #ifdef DEBUG
+            printf("Entrou dispatcher 2");
+            #endif // DEBUG
             queue_remove((queue_t**)&taskQueue, (queue_t*)next);
             next->currentQueue = NULL;
             ticksToGo = QUANTUM;
