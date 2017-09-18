@@ -51,7 +51,7 @@ void pingpong_init() {
     quantumTimer.it_value.tv_usec = 1000; // 1000us = 1ms
     quantumTimer.it_interval.tv_usec = 1000;
 
-    if(setitimer (ITIMER_REAL, &quantumTsimer, 0) < 0) {
+    if(setitimer (ITIMER_REAL, &quantumTimer, 0) < 0) {
         perror("Erro no setitimer: ");
         exit(ERRTIMER);
     }
