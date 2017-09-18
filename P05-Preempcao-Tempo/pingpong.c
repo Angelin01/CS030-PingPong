@@ -1,27 +1,60 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <ucontext.h>
+#include <sys/time.h>
+#include <signal.h>
 #include "pingpong.h"
 #include "datatypes.h"
 #include "queue.h"
 
 #define ERRSTACK -10 // Comecar os erros mais para tras pq sim
+#define ERRSIGNAL -11
+#define ERRTIMER -12
+#define QUANTUM 20
 
+// Valores numéricos
 long idcounter = 1;
+volatile short ticksToGo;
 
+// Para tasks
 task_t mainTask;
 task_t* currentTask;
 task_t dispatcher;
 task_t* taskQueue;
 task_t* toFree;
 
+// Preempção
+struct sigaction quantumCheck;
+struct itimerval quantumTimer;
+
+// Pré-declarações
 void dispatcher_body();
+void quantum_handler();
 
 void pingpong_init() {
     #ifdef DEBUG
     printf("Inicializando pingpong\n");
     #endif
     setvbuf(stdout, 0, _IONBF, 0);
+
+    // Para preempção
+    quantumCheck.sa_handler = quantum_handler;
+    sigemptyset(&quantumCheck.sa_mask);
+    quantumCheck.sa_flags = 0;
+    if(sigaction(SIGALRM, &quantumCheck, 0) < 0) {
+        perror("Erro no sigaction: ");
+        exit(ERRSIGNAL);
+    }
+
+    quantumTimer.it_value.tv_ssec = 0;
+    quantumTimer.it_interval.tv_sec = 0;
+    quantumTimer.it_value.tv_usec = 1000; // 1000us = 1ms
+    quantumTimer.it_interval.tv_usec = 1000;
+
+    if(setitimer (ITIMER_REAL, &timer, 0) < 0) {
+        perror("Erro no setitimer: ");
+        exit(ERRTIMER);
+    }
 
     // ID e contexto
     mainTask.tid = 0;
@@ -35,11 +68,14 @@ void pingpong_init() {
     mainTask.tContext.uc_stack.ss_flags = 0;
     mainTask.tContext.uc_link = 0;
 
+    mainTask.userTask = 0;
+
     getcontext(&(mainTask.tContext));
     currentTask = &mainTask;
 
     // Cria o dispatcher
     task_create(&dispatcher, dispatcher_body, NULL);
+    dispatcher.userTask = 0;
     queue_remove((queue_t**)&taskQueue, (queue_t*)&dispatcher);
     dispatcher.currentQueue = NULL;
 }
@@ -75,6 +111,7 @@ int task_create(task_t *task, void (*start_func)(void *), void *arg) {
     task->state = ready;
     task->staticPrio = 0;
     task->dynamicPrio = 0;
+    task->userTask = 1;
 
     #ifdef DEBUG
     printf("task_create: criou task %d\n", task->tid);
@@ -149,11 +186,12 @@ task_t* scheduler() { // Implementar melhor com prioridades
 void dispatcher_body() {
     task_t* next;
 
-    while(queue_size((queue_t*)taskQueue) > 0) { // Se fila estiver vazia, ACAAABOOOO
+    while(!taskQueue) { // Se fila estiver vazia, ACAAABOOOO
         next = scheduler(); // NULL se a fila está vazia
         if(next) { // Apenas garantia
             queue_remove((queue_t**)&taskQueue, (queue_t*)next);
             next->currentQueue = NULL;
+            ticksToGo = QUANTUM;
             task_switch(next);
             if(toFree) { // Se a task deu exit, precisa desalocar a stack
                 free(toFree->stack);
@@ -225,4 +263,14 @@ int task_getprio(task_t *task) {
     task = !task ? currentTask : task; // Se nulo eh task atual
 
     return(task->staticPrio);
+}
+
+void quantum_handler() {
+    // Se não for as tasks principais e acabar o quantum
+    if(currentTask->userTask && (--ticksToGo) <= 0) {
+        #ifdef DEBUG
+        printf("quantum_handler: acabou quantum da task %d\n", currentTask->tid);
+        #endif // DEBUG
+        task_yield();
+    }
 }

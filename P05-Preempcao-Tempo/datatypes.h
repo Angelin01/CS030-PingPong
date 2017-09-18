@@ -34,6 +34,7 @@ typedef struct task_t {
     ucontext_t tContext;
     char* stack;
     enum state_t state;
+    int userTask;
 
     // Prioridades
     int staticPrio;
