@@ -11,7 +11,7 @@ long idcounter = 1;
 
 task_t mainTask;
 task_t* currentTask;
-task_t* dispatcher;
+task_t dispatcher;
 task_t* taskQueue;
 task_t* toFree;
 
@@ -38,12 +38,10 @@ void pingpong_init() {
     getcontext(&(mainTask.tContext));
     currentTask = &mainTask;
 
-    // Aloca dispatcher
-    dispatcher = malloc(sizeof(task_t));
     // Cria o dispatcher
-    task_create(dispatcher, dispatcher_body, NULL);
-    queue_remove((queue_t**)&taskQueue, (queue_t*)dispatcher);
-    dispatcher->currentQueue = NULL;
+    task_create(&dispatcher, dispatcher_body, NULL);
+    queue_remove((queue_t**)&taskQueue, (queue_t*)&dispatcher);
+    dispatcher.currentQueue = NULL;
 }
 
 int task_create(task_t *task, void (*start_func)(void *), void *arg) {
@@ -101,15 +99,15 @@ void task_exit(int exitCode) {
     #endif
     task_t* tempTask = currentTask;
     /* Isso parece meio porco, procurar solucao melhor */
-    if(currentTask == dispatcher) { // Para distinguir se quem esta saindo eh o dispatcher...
+    if(currentTask == &dispatcher) { // Para distinguir se quem esta saindo eh o dispatcher...
         currentTask = &mainTask;
         swapcontext(&(tempTask->tContext), &(mainTask.tContext));
     }
     else { // Ou tarefas normais
-        currentTask = dispatcher;
+        currentTask = &dispatcher;
         toFree = tempTask;
         tempTask->state = exited;
-        swapcontext(&(tempTask->tContext), &(dispatcher->tContext));
+        swapcontext(&(tempTask->tContext), &(dispatcher.tContext));
     }
 }
 
@@ -176,7 +174,7 @@ void task_yield() {
         currentTask->currentQueue = &taskQueue;
     }
     currentTask->state = ready;
-    task_switch(dispatcher);
+    task_switch(&dispatcher);
 }
 
 // Para o futuro
