@@ -165,9 +165,6 @@ task_t* scheduler() { // Implementar melhor com prioridades
     task_t* aux = taskQueue;
 
     do {
-        if(aux->dynamicPrio > -20) { // Envelhece a tarefa se puder
-            aux->dynamicPrio--;
-        }
         if(aux->dynamicPrio < highestPriority->dynamicPrio) {
             highestPriority = aux;
         }
@@ -177,6 +174,14 @@ task_t* scheduler() { // Implementar melhor com prioridades
             }
         }
         aux = aux->next;
+    } while(aux != taskQueue);
+    
+    // Envelhecimento separado    
+    aux = taskQueue;
+    do {
+        if(aux->dynamicPrio > -20) { // Envelhece a tarefa se puder
+            aux->dynamicPrio--;
+        }
     } while(aux != taskQueue);
 
     highestPriority->dynamicPrio = highestPriority->staticPrio; // Reseta a prioridade
