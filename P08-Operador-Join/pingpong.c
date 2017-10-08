@@ -152,13 +152,15 @@ void task_exit(int exitCode) {
     #ifdef DEBUG
     printf("task_exit: encerrando task %d\n", currentTask->tid);
     #endif
+
     task_t* tempTask = currentTask;
     task_t* toResume = currentTask->suspendedQueue;
-    task_t* auxResume = toResume->next;
+    task_t* auxResume;
 
     printf("Task %d exit: execution time %d ms, processor time %d ms, %d activations\n", currentTask->tid, miliTime - currentTask->startTime, currentTask->cpuTime, currentTask->activations);
 
     if(currentTask->suspendedQueue) {
+        auxResume = toResume->next;
         while(auxResume != toResume) {
             task_resume(toResume);
             toResume = auxResume;
