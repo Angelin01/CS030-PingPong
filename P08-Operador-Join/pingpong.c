@@ -188,7 +188,7 @@ int task_id() {
 /*      Dispatcher      */
 /* -------------------- */
 
-task_t* scheduler() { // Implementar melhor com prioridades
+task_t* scheduler() {
     if(!taskQueue) { // Nao ha tarefas
         return(NULL);
     }
@@ -254,7 +254,9 @@ void task_yield() {
     task_switch(&dispatcher);
 }
 
-// Para o futuro
+/* ------------------- */
+/*      Suspensas      */
+/* ------------------- */
 void task_suspend(task_t *task, task_t **queue) {
     task = !task ? currentTask : task; // Se nulo eh task atual
 
@@ -263,7 +265,7 @@ void task_suspend(task_t *task, task_t **queue) {
     #endif
 
     if(queue) { // Se queue esta setado, remover task da queue
-        queue_append((queue_t**)queue, queue_remove((queue_t**)task->currentQueue, (queue_t*)task));
+        queue_append((queue_t**)queue, queue_remove((queue_t**)&task->currentQueue, (queue_t*)task));
         task->currentQueue = queue;
     }
     // Task agora esta suspensa
@@ -271,7 +273,6 @@ void task_suspend(task_t *task, task_t **queue) {
     task_yield();
 }
 
-// Para o futuro
 void task_resume(task_t *task) {
     #ifdef DEBUG
     printf("task_resume: resumindo task %d\n", task->tid);
@@ -285,7 +286,24 @@ void task_resume(task_t *task) {
     task->currentQueue = &taskQueue;
 }
 
-// Prioridades
+int task_join(task_t *task) {
+
+
+    if(!task || task->state == exited) {
+        return (-1);
+    }
+
+    #ifdef DEBUG
+    printf("Dando join na tarefa %d com a tarefa %d\n", currentTask->tid, task->tid);
+    #endif // DEBUG
+
+    task_suspend(NULL, &(task->suspendedQueue));
+    return (task->exitCode);
+}
+
+/* --------------------- */
+/*      Prioridades      */
+/* --------------------- */
 void task_setprio(task_t *task, int prio) {
     task = !task ? currentTask : task; // Se nulo eh task atual
     #ifdef DEBUG
@@ -305,7 +323,9 @@ int task_getprio(task_t *task) {
     return(task->staticPrio);
 }
 
-// Roda a cada 1ms
+/* ----------------- */
+/*      Quantum      */
+/* ----------------- */
 void quantum_handler() {
     currentTask->cpuTime++;
     miliTime++;
@@ -319,23 +339,11 @@ void quantum_handler() {
     }
 }
 
-// Timer
+/* -------------- */
+/*      Timer     */
+/* -------------- */
 unsigned int systime() {
     return miliTime;
 }
 
-// Suspender
-int task_join(task_t *task) {
 
-
-    if(!task || task->state == exited) {
-        return (-1);
-    }
-
-    #ifdef DEBUG
-    printf("Dando join na tarefa %d com a tarefa %d", currentTask->tid, task->tid);
-    #endif // DEBUG
-
-    task_suspend(NULL, &task->suspendedQueue);
-    return (task->exitCode);
-}
