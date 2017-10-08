@@ -57,6 +57,13 @@ void pingpong_init() {
         exit(ERRTIMER);
     }
 
+    /* -------------- */
+    /* Coisas da main */
+    /* -------------- */
+    #ifdef DEBUG
+    printf("Iniciliaziando tarefa main\n");
+    #endif // DEBUG
+
     // ID e contexto
     mainTask.tid = 0;
 
@@ -69,16 +76,20 @@ void pingpong_init() {
     mainTask.tContext.uc_stack.ss_flags = 0;
     mainTask.tContext.uc_link = 0;
 
-    mainTask.userTask = 0;
+    mainTask.userTask = 1; // A partir do projeto 7, main eh tarefa de usuario
 
     getcontext(&(mainTask.tContext));
     currentTask = &mainTask;
+    queue_append((queue_t**)&taskQueue, (queue_t*)&mainTask);
 
-    // Cria o dispatcher
+    /* -------------------- */
+    /* Coisas do dispatcher */
+    /* -------------------- */
     task_create(&dispatcher, dispatcher_body, NULL);
     dispatcher.userTask = 0;
     queue_remove((queue_t**)&taskQueue, (queue_t*)&dispatcher);
     dispatcher.currentQueue = NULL;
+    task_switch(&dispatcher);
 }
 
 int task_create(task_t *task, void (*start_func)(void *), void *arg) {
@@ -219,10 +230,12 @@ void task_yield() {
     #ifdef DEBUG
     printf("task_yield: rendendo task %d\n", currentTask->tid);
     #endif
+    /* Desde projeto 7 main agora fica sim na fila
     if(currentTask != &mainTask) { // main task nao fica na fila
         queue_append((queue_t**)&taskQueue, (queue_t*)currentTask);
         currentTask->currentQueue = &taskQueue;
     }
+    */
     currentTask->state = ready;
     task_switch(&dispatcher);
 }
