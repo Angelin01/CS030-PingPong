@@ -128,6 +128,8 @@ int task_create(task_t *task, void (*start_func)(void *), void *arg) {
     task->startTime = systime();
     task->userTask = 1;
 
+    task->suspendedQueue = NULL;
+
     #ifdef DEBUG
     printf("task_create: criou task %d\n", task->tid);
     #endif
@@ -150,8 +152,19 @@ void task_exit(int exitCode) {
     printf("task_exit: encerrando task %d\n", currentTask->tid);
     #endif
     task_t* tempTask = currentTask;
+    task_t* toResume = currentTask->suspendedQueue;
+    task_t* auxResume = toResume->next;
 
     printf("Task %d exit: execution time %d ms, processor time %d ms, %d activations", currentTask->tid, miliTime - currentTask->startTime, currentTask->cpuTime, currentTask->activations);
+
+    if(currentTask->suspendedQueue) {
+        while(auxResume != toResume) {
+            task_resume(toResume);
+            toResume = auxResume;
+            auxResume = auxResume->next;
+        }
+        task_resume(toResume);
+    }
 
     /* Isso parece meio porco, procurar solucao melhor */
     if(currentTask == &dispatcher) { // Para distinguir se quem esta saindo eh o dispatcher...
@@ -162,6 +175,7 @@ void task_exit(int exitCode) {
         currentTask = &dispatcher;
         toFree = tempTask;
         tempTask->state = exited;
+        tempTask->exitCode = exitCode;
         swapcontext(&(tempTask->tContext), &(dispatcher.tContext));
     }
 }
@@ -230,13 +244,13 @@ void task_yield() {
     #ifdef DEBUG
     printf("task_yield: rendendo task %d\n", currentTask->tid);
     #endif
-    // Desde projeto 7 main agora fica sim na fila
-    // if(currentTask != &mainTask) { // main task nao fica na fila
-    queue_append((queue_t**)&taskQueue, (queue_t*)currentTask);
-    currentTask->currentQueue = &taskQueue;
-    // }
+    // Volta pra pronta se estava executando
+    if(currentTask->state == executing) {
+        queue_append((queue_t**)&taskQueue, (queue_t*)currentTask);
+        currentTask->currentQueue = &taskQueue;
+        currentTask->state = ready;
+    }
 
-    currentTask->state = ready;
     task_switch(&dispatcher);
 }
 
@@ -254,6 +268,7 @@ void task_suspend(task_t *task, task_t **queue) {
     }
     // Task agora esta suspensa
     task->state = suspended;
+    task_yield();
 }
 
 // Para o futuro
@@ -307,4 +322,20 @@ void quantum_handler() {
 // Timer
 unsigned int systime() {
     return miliTime;
+}
+
+// Suspender
+int task_join(task_t *task) {
+
+
+    if(!task || task->state == exited) {
+        return (-1);
+    }
+
+    #ifdef DEBUG
+    printf("Dando join na tarefa %d com a tarefa %d", currentTask->tid, task->tid);
+    #endif // DEBUG
+
+    task_suspend(NULL, &task->suspendedQueue);
+    return (task->exitCode);
 }
