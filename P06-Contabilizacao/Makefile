@@ -12,6 +12,9 @@ OBJPRIO = pingpong-contab-prio.o
 #compiler stuffs
 GCC = /usr/bin/gcc
 FLAGS = -Wall
+
+default: normal
+
 debug: DEBUG = -g -DDEBUG
 debug: normal prio
 
