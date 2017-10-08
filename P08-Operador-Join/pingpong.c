@@ -81,6 +81,7 @@ void pingpong_init() {
     getcontext(&(mainTask.tContext));
     currentTask = &mainTask;
     queue_append((queue_t**)&taskQueue, (queue_t*)&mainTask);
+    mainTask.currentQueue = &taskQueue;
 
     /* -------------------- */
     /* Coisas do dispatcher */
@@ -155,7 +156,7 @@ void task_exit(int exitCode) {
     task_t* toResume = currentTask->suspendedQueue;
     task_t* auxResume = toResume->next;
 
-    printf("Task %d exit: execution time %d ms, processor time %d ms, %d activations", currentTask->tid, miliTime - currentTask->startTime, currentTask->cpuTime, currentTask->activations);
+    printf("Task %d exit: execution time %d ms, processor time %d ms, %d activations\n", currentTask->tid, miliTime - currentTask->startTime, currentTask->cpuTime, currentTask->activations);
 
     if(currentTask->suspendedQueue) {
         while(auxResume != toResume) {
@@ -265,7 +266,10 @@ void task_suspend(task_t *task, task_t **queue) {
     #endif
 
     if(queue) { // Se queue esta setado, remover task da queue
-        queue_append((queue_t**)queue, queue_remove((queue_t**)&task->currentQueue, (queue_t*)task));
+        if(task->currentQueue) {
+            queue_remove((queue_t**)&task->currentQueue, (queue_t*)task);
+        }
+        queue_append((queue_t**)queue, (queue_t*)task);
         task->currentQueue = queue;
     }
     // Task agora esta suspensa

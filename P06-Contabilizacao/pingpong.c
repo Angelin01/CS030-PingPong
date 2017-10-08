@@ -140,7 +140,7 @@ void task_exit(int exitCode) {
     #endif
     task_t* tempTask = currentTask;
 
-    printf("Task %d exit: execution time %d ms, processor time %d ms, %d activations", currentTask->tid, miliTime - currentTask->startTime, currentTask->cpuTime, currentTask->activations);
+    printf("Task %d exit: execution time %d ms, processor time %d ms, %d activations\n", currentTask->tid, miliTime - currentTask->startTime, currentTask->cpuTime, currentTask->activations);
 
     /* Isso parece meio porco, procurar solucao melhor */
     if(currentTask == &dispatcher) { // Para distinguir se quem esta saindo eh o dispatcher...
