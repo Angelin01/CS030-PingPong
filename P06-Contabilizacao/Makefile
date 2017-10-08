@@ -8,7 +8,6 @@ OBJM = pingpong.o queue.o
 OBJNORMAL = pingpong-contab.o
 OBJPRIO = pingpong-contab-prio.o
 
-
 #compiler stuffs
 GCC = /usr/bin/gcc
 FLAGS = -Wall
@@ -21,11 +20,11 @@ debug: normal prio
 %.o: %.c $(INCL)
 	$(GCC) $(FLAGS) $(DEBUG) -c $< -o $@
 	
-normal: $(OBJM) $(OBJ1)
+normal: $(OBJM) $(OBJNORMAL)
 	$(GCC) $(OBJM) $(OBJNORMAL) $(FLAGS) $(LIBS) -o $(NORMAL)
 
-prio: $(OBJM) $(OBJ2)
+prio: $(OBJM) $(OBJPRIO)
 	$(GCC) $(OBJM) $(OBJPRIO) $(FLAGS) $(LIBS) -o $(PRIO)
 	
 clean:
-	rm -f *.o $(TASKS1) $(TASKS2) $(TASKS3)
+	rm -f *.o $(NORMAL) $(PRIO)
