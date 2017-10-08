@@ -277,6 +277,7 @@ int task_getprio(task_t *task) {
     return(task->staticPrio);
 }
 
+// Roda a cada 1ms
 void quantum_handler() {
     currentTask->cpuTime++;
     miliTime++;
