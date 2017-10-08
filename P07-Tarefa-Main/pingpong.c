@@ -61,7 +61,7 @@ void pingpong_init() {
     /* Coisas da main */
     /* -------------- */
     #ifdef DEBUG
-    printf("Iniciliaziando tarefa main\n");
+    printf("Inicilizando tarefa main\n");
     #endif // DEBUG
 
     // ID e contexto
@@ -230,12 +230,12 @@ void task_yield() {
     #ifdef DEBUG
     printf("task_yield: rendendo task %d\n", currentTask->tid);
     #endif
-    /* Desde projeto 7 main agora fica sim na fila
-    if(currentTask != &mainTask) { // main task nao fica na fila
-        queue_append((queue_t**)&taskQueue, (queue_t*)currentTask);
-        currentTask->currentQueue = &taskQueue;
-    }
-    */
+    // Desde projeto 7 main agora fica sim na fila
+    // if(currentTask != &mainTask) { // main task nao fica na fila
+    queue_append((queue_t**)&taskQueue, (queue_t*)currentTask);
+    currentTask->currentQueue = &taskQueue;
+    // }
+
     currentTask->state = ready;
     task_switch(&dispatcher);
 }
