@@ -40,6 +40,11 @@ typedef struct task_t {
     int staticPrio;
     int dynamicPrio;
 
+    // Timer
+    unsigned int startTime;
+    unsigned int cpuTime;
+    unsigned int activations;
+
 } task_t ;
 
 // estrutura que define um semáforo

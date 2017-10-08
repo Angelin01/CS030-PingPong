@@ -15,6 +15,7 @@
 // Valores numéricos
 long idcounter = 1;
 volatile short ticksToGo;
+volatile unsigned int miliTime = 0;
 
 // Para tasks
 task_t mainTask;
@@ -111,6 +112,9 @@ int task_create(task_t *task, void (*start_func)(void *), void *arg) {
     task->state = ready;
     task->staticPrio = 0;
     task->dynamicPrio = 0;
+    task->cpuTime = 0;
+    task->activations = 0;
+    task->startTime = systime();
     task->userTask = 1;
 
     #ifdef DEBUG
@@ -135,6 +139,9 @@ void task_exit(int exitCode) {
     printf("task_exit: encerrando task %d\n", currentTask->tid);
     #endif
     task_t* tempTask = currentTask;
+
+    printf("Task %d exit: execution time %d ms, processor time %d ms, %d activations", currentTask->tid, miliTime - currentTask->startTime, currentTask->cpuTime, currentTask->activations);
+
     /* Isso parece meio porco, procurar solucao melhor */
     if(currentTask == &dispatcher) { // Para distinguir se quem esta saindo eh o dispatcher...
         currentTask = &mainTask;
@@ -175,8 +182,8 @@ task_t* scheduler() { // Implementar melhor com prioridades
         }
         aux = aux->next;
     } while(aux != taskQueue);
-    
-    // Envelhecimento separado    
+
+    // Envelhecimento separado
     aux = taskQueue;
     do {
         if(aux->dynamicPrio > -20) { // Envelhece a tarefa se puder
@@ -195,6 +202,7 @@ void dispatcher_body() {
         if(next) { // Apenas garantia
             queue_remove((queue_t**)&taskQueue, (queue_t*)next);
             next->currentQueue = NULL;
+            next->activations++;
             ticksToGo = QUANTUM;
             task_switch(next);
             if(toFree) { // Se a task deu exit, precisa desalocar a stack
@@ -270,6 +278,9 @@ int task_getprio(task_t *task) {
 }
 
 void quantum_handler() {
+    currentTask->cpuTime++;
+    miliTime++;
+
     // Se não for as tasks principais e acabar o quantum
     if(currentTask->userTask && (--ticksToGo) <= 0) {
         #ifdef DEBUG
@@ -277,4 +288,9 @@ void quantum_handler() {
         #endif // DEBUG
         task_yield();
     }
+}
+
+// Timer
+unsigned int systime() {
+    return miliTime;
 }
