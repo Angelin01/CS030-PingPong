@@ -247,12 +247,11 @@ void task_yield() {
     #ifdef DEBUG
     printf("task_yield: rendendo task %d\n", currentTask->tid);
     #endif
+
     // Volta pra pronta se estava executando
-    if(currentTask->state == executing) {
-        queue_append((queue_t**)&taskQueue, (queue_t*)currentTask);
-        currentTask->currentQueue = &taskQueue;
-        currentTask->state = ready;
-    }
+    queue_append((queue_t**)&taskQueue, (queue_t*)currentTask);
+    currentTask->currentQueue = &taskQueue;
+    currentTask->state = ready;
 
     task_switch(&dispatcher);
 }
@@ -274,9 +273,10 @@ void task_suspend(task_t *task, task_t **queue) {
         queue_append((queue_t**)queue, (queue_t*)task);
         task->currentQueue = queue;
     }
+
     // Task agora esta suspensa
     task->state = suspended;
-    task_yield();
+    task_switch(&dispatcher);
 }
 
 void task_resume(task_t *task) {
@@ -294,7 +294,7 @@ void task_resume(task_t *task) {
 
 int task_join(task_t *task) {
 
-
+    // Se nao existir ou ja tiver saido, retorna -1
     if(!task || task->state == exited) {
         return (-1);
     }
@@ -303,8 +303,8 @@ int task_join(task_t *task) {
     printf("Dando join na tarefa %d com a tarefa %d\n", currentTask->tid, task->tid);
     #endif // DEBUG
 
-    task_suspend(NULL, &(task->suspendedQueue));
-    return (task->exitCode);
+    task_suspend(NULL, &(task->suspendedQueue)); // Suspende e soh volta quando task voltar
+    return (task->exitCode); // Quando voltar a tarefa tera saido e tera um exitCode
 }
 
 /* --------------------- */
