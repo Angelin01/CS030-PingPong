@@ -87,6 +87,7 @@ void pingpong_init() {
     /* -------------------- */
     task_create(&dispatcher, dispatcher_body, NULL);
     dispatcher.userTask = 0;
+	dispatcher.activations = 0;
     queue_remove((queue_t**)&taskQueue, (queue_t*)&dispatcher);
     dispatcher.currentQueue = NULL;
     task_switch(&dispatcher);
@@ -209,6 +210,7 @@ task_t* scheduler() { // Implementar melhor com prioridades
 void dispatcher_body() {
     task_t* next;
     while(taskQueue) { // Se fila estiver vazia, ACAAABOOOO
+		dispatcher.activations++;
         next = scheduler(); // NULL se a fila está vazia
         if(next) { // Apenas garantia
             queue_remove((queue_t**)&taskQueue, (queue_t*)next);
