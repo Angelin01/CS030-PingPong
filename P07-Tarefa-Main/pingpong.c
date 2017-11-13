@@ -201,6 +201,7 @@ task_t* scheduler() { // Implementar melhor com prioridades
         if(aux->dynamicPrio > -20) { // Envelhece a tarefa se puder
             aux->dynamicPrio--;
         }
+		aux = aux->next;
     } while(aux != taskQueue);
 
     highestPriority->dynamicPrio = highestPriority->staticPrio; // Reseta a prioridade
