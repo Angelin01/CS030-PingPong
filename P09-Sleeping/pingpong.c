@@ -231,11 +231,23 @@ task_t* scheduler() {
 void dispatcher_body() {
     task_t* next;
     task_t* toWake;
+    task_t* auxWake;
+
     while(taskQueue) { // Se fila estiver vazia, ACAAABOOOO
 		dispatcher.activations++;
 
 		// Verifica se deve acordar tarefas
-
+		if(sleepQueue) {
+            auxWake = suspendedQueue;
+            do {
+                toWake = auxWake;
+                auxWake = auxWake->next;
+                if(toWake->wakeTime <= miliTime) { // Se passou da hora de acordar
+                    task_resume(toWake);
+                    toWake->state=ready;
+                }
+            } while (suspendQueue && auxWake->next != suspendedQueue);
+		}
 
         next = scheduler(); // NULL se a fila está vazia
         if(next) { // Apenas garantia
