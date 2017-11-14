@@ -75,6 +75,9 @@ queue_t* queue_remove(queue_t** queue, queue_t* elem) {
     } while(aux != first);
     /* Se sair do while chegou ao final (comeco de novo) da fila sem achar o elemento */
     printf("Erro: o elemento nao pertence a fila\n");
+    #ifdef DEBUG
+    printf("task_suspend: debug4 \n");
+    #endif
     return(NULL);
 }
 

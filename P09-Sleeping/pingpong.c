@@ -233,7 +233,7 @@ void dispatcher_body() {
     task_t* toWake;
     task_t* auxWake;
 
-    while(taskQueue) { // Se fila estiver vazia, ACAAABOOOO
+    while(taskQueue || sleepQueue) { // Se fila estiver vazia, ACAAABOOOO
 		dispatcher.activations++;
 
 		// Verifica se deve acordar tarefas
@@ -292,7 +292,7 @@ void task_suspend(task_t *task, task_t **queue) {
 
     if(queue) { // Se queue esta setado, remover task da queue
         if(task->currentQueue) {
-            queue_remove((queue_t**)&task->currentQueue, (queue_t*)task);
+            queue_remove((queue_t**)task->currentQueue, (queue_t*)task);
         }
         queue_append((queue_t**)queue, (queue_t*)task);
         task->currentQueue = queue;
