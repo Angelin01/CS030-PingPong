@@ -230,8 +230,13 @@ task_t* scheduler() {
 
 void dispatcher_body() {
     task_t* next;
+    task_t* toWake;
     while(taskQueue) { // Se fila estiver vazia, ACAAABOOOO
 		dispatcher.activations++;
+
+		// Verifica se deve acordar tarefas
+
+
         next = scheduler(); // NULL se a fila está vazia
         if(next) { // Apenas garantia
             queue_remove((queue_t**)&taskQueue, (queue_t*)next);
@@ -345,7 +350,7 @@ void quantum_handler() {
     miliTime++;
 
     // Se não for as tasks principais e acabar o quantum
-    if((--ticksToGo) <= 0 && preempcaoAtiva && currentTask->userTask) {
+    if(currentTask->userTask && (--ticksToGo) <= 0 && preempcaoAtiva) {
         #ifdef DEBUG
         printf("quantum_handler: acabou quantum da task %d\n", currentTask->tid);
         #endif // DEBUG
