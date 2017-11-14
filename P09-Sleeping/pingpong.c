@@ -238,7 +238,7 @@ void dispatcher_body() {
 
 		// Verifica se deve acordar tarefas
 		if(sleepQueue) {
-            auxWake = suspendedQueue;
+            auxWake = sleepQueue;
             do {
                 toWake = auxWake;
                 auxWake = auxWake->next;
@@ -246,7 +246,7 @@ void dispatcher_body() {
                     task_resume(toWake);
                     toWake->state=ready;
                 }
-            } while (suspendQueue && auxWake->next != suspendedQueue);
+            } while (sleepQueue && auxWake->next != sleepQueue);
 		}
 
         next = scheduler(); // NULL se a fila está vazia
@@ -388,13 +388,13 @@ void task_sleep(int t) {
 
     currentTask->wakeTime = miliTime + t*1000; // t em segundos
 
-    if(task->currentQueue) {
-        queue_remove((queue_t**)&currentTask->currentQueue, (queue_t*)task);
+    if(currentTask->currentQueue) {
+        queue_remove((queue_t**)&currentTask->currentQueue, (queue_t*)currentTask);
     }
     queue_append((queue_t**)&sleepQueue, (queue_t*)currentTask);
 
     // Task agora esta dormindo
-    task->state = sleeping;
+    currentTask->state = sleeping;
     preempcaoAtiva = 1;
     task_switch(&dispatcher);
 }
