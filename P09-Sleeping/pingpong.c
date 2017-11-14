@@ -388,6 +388,11 @@ void task_sleep(int t) {
     printf("task_sleep: dormindo task %d por %d segundos\n", currentTask->tid, t);
     #endif
 
+    if (t <= 0){
+        preempcaoAtiva = 1;
+        return;
+    }
+
     currentTask->wakeTime = miliTime + t*1000; // t em segundos
 
     if(currentTask->currentQueue) {
