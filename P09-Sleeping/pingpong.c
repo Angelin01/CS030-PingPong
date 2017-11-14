@@ -28,6 +28,7 @@ task_t* sleepQueue;
 // Preempção
 struct sigaction quantumCheck;
 struct itimerval quantumTimer;
+int preempcaoAtiva;
 
 // Pré-declarações
 void dispatcher_body();
@@ -57,6 +58,7 @@ void pingpong_init() {
         perror("Erro no setitimer: ");
         exit(ERRTIMER);
     }
+    preempcaoAtiva = 1;
 
     /* -------------- */
     /* Coisas da main */
@@ -264,6 +266,7 @@ void task_yield() {
 /*      Suspensas      */
 /* ------------------- */
 void task_suspend(task_t *task, task_t **queue) {
+    preempcaoAtiva = 0;
     task = !task ? currentTask : task; // Se nulo eh task atual
 
     #ifdef DEBUG
@@ -280,6 +283,7 @@ void task_suspend(task_t *task, task_t **queue) {
 
     // Task agora esta suspensa
     task->state = suspended;
+    preempcaoAtiva = 1;
     task_switch(&dispatcher);
 }
 
@@ -297,7 +301,7 @@ void task_resume(task_t *task) {
 }
 
 int task_join(task_t *task) {
-
+    preempcaoAtiva = 0;
     // Se nao existir ou ja tiver saido, retorna -1
     if(!task || task->state == exited) {
         return (-1);
@@ -341,7 +345,7 @@ void quantum_handler() {
     miliTime++;
 
     // Se não for as tasks principais e acabar o quantum
-    if(currentTask->userTask && (--ticksToGo) <= 0) {
+    if((--ticksToGo) <= 0 && preempcaoAtiva && currentTask->userTask) {
         #ifdef DEBUG
         printf("quantum_handler: acabou quantum da task %d\n", currentTask->tid);
         #endif // DEBUG
@@ -360,7 +364,7 @@ unsigned int systime() {
 /*      Sleep     */
 /* -------------- */
 void task_sleep(int t) {
-
+    preempcaoAtiva = 0;
     #ifdef DEBUG
     printf("task_sleep: dormindo task %d por %d segundos\n", currentTask->tid, t);
     #endif
@@ -374,5 +378,6 @@ void task_sleep(int t) {
 
     // Task agora esta dormindo
     task->state = sleeping;
+    preempcaoAtiva = 1;
     task_switch(&dispatcher);
 }
