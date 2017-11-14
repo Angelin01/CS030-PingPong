@@ -15,7 +15,8 @@ enum state_t {
     executing = 0,
     ready,
     suspended,
-    exited
+    exited,
+    sleeping
 };
 
 // Estrutura que define uma tarefa
@@ -48,6 +49,9 @@ typedef struct task_t {
     // Suspensao
     struct task_t* suspendedQueue;
     int exitCode;
+
+    // Sleep
+    int wakeTime;
 
 } task_t ;
 

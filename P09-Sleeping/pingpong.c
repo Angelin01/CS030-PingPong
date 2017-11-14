@@ -23,6 +23,7 @@ task_t* currentTask;
 task_t dispatcher;
 task_t* taskQueue;
 task_t* toFree;
+task_t* sleepQueue;
 
 // Preempção
 struct sigaction quantumCheck;
@@ -355,4 +356,23 @@ unsigned int systime() {
     return miliTime;
 }
 
+/* -------------- */
+/*      Sleep     */
+/* -------------- */
+void task_sleep(int t) {
 
+    #ifdef DEBUG
+    printf("task_sleep: dormindo task %d por %d segundos\n", currentTask->tid, t);
+    #endif
+
+    currentTask->wakeTime = miliTime + t*1000; // t em segundos
+
+    if(task->currentQueue) {
+        queue_remove((queue_t**)&currentTask->currentQueue, (queue_t*)task);
+    }
+    queue_append((queue_t**)&sleepQueue, (queue_t*)currentTask);
+
+    // Task agora esta dormindo
+    task->state = sleeping;
+    task_switch(&dispatcher);
+}
