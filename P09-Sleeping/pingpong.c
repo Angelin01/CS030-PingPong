@@ -305,6 +305,7 @@ void task_suspend(task_t *task, task_t **queue) {
 }
 
 void task_resume(task_t *task) {
+    preempcaoAtiva = 0;
     #ifdef DEBUG
     printf("task_resume: resumindo task %d\n", task->tid);
     #endif
@@ -315,6 +316,7 @@ void task_resume(task_t *task) {
     // Volta a fila normal
     queue_append((queue_t**)&taskQueue, (queue_t*)task);
     task->currentQueue = &taskQueue;
+    preempcaoAtiva = 1;
 }
 
 int task_join(task_t *task) {
@@ -394,6 +396,7 @@ void task_sleep(int t) {
     queue_append((queue_t**)&sleepQueue, (queue_t*)currentTask);
 
     // Task agora esta dormindo
+    currentTask->currentQueue = &sleepQueue;
     currentTask->state = sleeping;
     preempcaoAtiva = 1;
     task_switch(&dispatcher);
