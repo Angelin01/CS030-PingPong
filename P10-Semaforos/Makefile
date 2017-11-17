@@ -2,8 +2,7 @@
 INCL = queue.h datatypes.h pingpong.h
 EXE1 = pingpong-racecond
 EXE2 = pingpong-semaphore
-COWN = queue.c pingpong.c
-CFILES = $(COWN) $(EXE1).c $(EXE2).c
+CFILES = queue.c pingpong.c
 OBJS = $(CFILES:.c=.o)
 LIBS =
 
@@ -13,28 +12,26 @@ FLAGS = -Wall
 LIBPATH =
 DEBUGFLAGS = -Wall -g -DDEBUG
 
+default: $(EXE1) $(EXE2)
+
 # Compile library
 %.o: %.c
 	$(GCC) -c $(FLAGS) $*.c
-
-default: racecond semaphore
 	
 # Link objects into binary
-racecond:
-	$(EXE1): $(OBJS)
-		$(GCC) -o $(EXE1) $(LIBPATH) $(OBJS)
-
-semaphore:
-	$(EXE2): $(OBJS)
-		$(GCC) -o $(EXE2) $(LIBPATH) $(OBJS)
+$(EXE1): $(OBJS) $(EXE1).o
+	$(GCC) $(LIBPATH) $(OBJS) $(EXE1).o -o $@
+	
+$(EXE2): $(OBJS) $(EXE2).o
+	$(GCC) $(LIBPATH) $(OBJS) $(EXE2).o -o $@
 		
 # Object library depency
 $(OBJS): $(INCL)
 
 # Debug executable
 debug:
-	$(GCC) $(DEBUGFLAGS) $(COWN) $(EXE1).c -o $(EXE1)_debug
-	$(GCC) $(DEBUGFLAGS) $(COWN) $(EXE2).c -o $(EXE2)_debug
+	$(GCC) $(DEBUGFLAGS) $(CFILES) $(EXE1).c -o $(EXE1)_debug
+	$(GCC) $(DEBUGFLAGS) $(CFILES) $(EXE2).c -o $(EXE2)_debug
 
 # Clean
 clean:
