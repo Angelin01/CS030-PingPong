@@ -232,6 +232,7 @@ void dispatcher_body() {
     task_t* next;
     task_t* toWake;
     task_t* auxWake;
+	unsigned int currentTime;
 
     while(taskQueue || sleepQueue) { // Se fila estiver vazia, ACAAABOOOO
 		dispatcher.activations++;
@@ -239,12 +240,12 @@ void dispatcher_body() {
 		// Verifica se deve acordar tarefas
 		if(sleepQueue) {
             auxWake = sleepQueue;
+			currentTime = militime;
             do {
                 toWake = auxWake;
                 auxWake = auxWake->next;
-                if(toWake->wakeTime <= miliTime) { // Se passou da hora de acordar
+                if(toWake->wakeTime <= currentTime) { // Se passou da hora de acordar
                     task_resume(toWake);
-                    toWake->state=ready;
                 }
             } while (sleepQueue && auxWake->next != sleepQueue);
 		}
@@ -316,6 +317,7 @@ void task_resume(task_t *task) {
     // Volta a fila normal
     queue_append((queue_t**)&taskQueue, (queue_t*)task);
     task->currentQueue = &taskQueue;
+	task->state=ready;
     preempcaoAtiva = 1;
 }
 
