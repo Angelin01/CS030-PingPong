@@ -306,7 +306,6 @@ void task_suspend(task_t *task, task_t **queue) {
 }
 
 void task_resume(task_t *task) {
-    preempcaoAtiva = 0;
     #ifdef DEBUG
     printf("task_resume: resumindo task %d\n", task->tid);
     #endif
@@ -318,7 +317,6 @@ void task_resume(task_t *task) {
     queue_append((queue_t**)&taskQueue, (queue_t*)task);
     task->currentQueue = &taskQueue;
 	task->state=ready;
-    preempcaoAtiva = 1;
 }
 
 int task_join(task_t *task) {
@@ -452,7 +450,7 @@ int sem_down(semaphore_t *s){
     return(0);
 }
 
-int sem_up(semaphore_t *s){
+int sem_up(semaphore_t *s) {
     preempcaoAtiva = 0;
     if(!s || !s->active) {
         preempcaoAtiva = 1;
@@ -468,6 +466,24 @@ int sem_up(semaphore_t *s){
             task_resume(s->suspendedQueue);
         }
     }
+    preempcaoAtiva = 1;
+    return(0);
+}
+
+int sem_destroy(semaphore_t *s) {
+    preempcaoAtiva = 0;
+    if(!s || !s->active) {
+        preempcaoAtiva = 1;
+        return(-1);
+    }
+
+    // Acorda todas as tarefas que tem que acordar
+    // Bem melhor que a implementacao do task_exit, mas nao vou mudar la
+    while(s->suspendedQueue) {
+        task_resume(s->suspendedQueue);
+    }
+
+    s->active = 0;
     preempcaoAtiva = 1;
     return(0);
 }
