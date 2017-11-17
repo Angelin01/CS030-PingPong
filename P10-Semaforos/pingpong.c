@@ -429,15 +429,15 @@ int sem_create(semaphore_t *s, int value) {
 
 int sem_down(semaphore_t *s){
     preempcaoAtiva = 0;
+    // Checa se semaforo existe
+    if(!s || !s->active) {
+        preempcaoAtiva = 1;
+        return(-1);
+    }
     #ifdef DEBUG
     printf("sem_down: Tarefa %d dando down, para valor %d\n", currentTask->tid, s->value-1);
     #endif // DEBUG
 
-    // Checa se semaforo existe
-    if(!s) {
-        preempcaoAtiva = 1;
-        return(-1);
-    }
 
     if(--(s->value) < 0) {
         task_suspend(NULL, (queue_t**)&s->suspendedQueue);
@@ -449,5 +449,25 @@ int sem_down(semaphore_t *s){
     if(!s->active) {
         return(-1);
     }
+    return(0);
+}
+
+int sem_up(semaphore_t *s){
+    preempcaoAtiva = 0;
+    if(!s || !s->active) {
+        preempcaoAtiva = 1;
+        return(-1);
+    }
+
+    #ifdef DEBUG
+    printf("sem_up: Tarefa %d dando up, para valor %d\n", currentTask->tid, s->value+1);
+    #endif // DEBUG
+
+    if(++(s->value) <= 0) { // Acordar tarefa se ainda houveram tarefas esperando
+        if(s->suspendedQueue) { // Soh por garantia, deve haver uma tarefa na fila
+            task_resume(s->suspendedQueue);
+        }
+    }
+    preempcaoAtiva = 1;
     return(0);
 }
