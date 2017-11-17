@@ -408,3 +408,17 @@ void task_sleep(int t) {
     preempcaoAtiva = 1;
     task_switch(&dispatcher);
 }
+
+int sem_create(semaphore_t *s, int value) {
+    #ifdef DEBUG
+    printf("Criando semáforo com valor %d\n", value);
+    #endif // DEBUG
+
+    if(!s) {
+        return(-1);
+    }
+
+    s->value = value;
+    s->active=1;
+    return(0);
+}
