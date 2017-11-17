@@ -240,7 +240,7 @@ void dispatcher_body() {
 		// Verifica se deve acordar tarefas
 		if(sleepQueue) {
             auxWake = sleepQueue;
-			currentTime = militime;
+			currentTime = miliTime;
             do {
                 toWake = auxWake;
                 auxWake = auxWake->next;
