@@ -409,6 +409,10 @@ void task_sleep(int t) {
     task_switch(&dispatcher);
 }
 
+/* ----------------- */
+/*     Semaforos     */
+/* ----------------- */
+
 int sem_create(semaphore_t *s, int value) {
     #ifdef DEBUG
     printf("Criando semáforo com valor %d\n", value);
@@ -420,5 +424,30 @@ int sem_create(semaphore_t *s, int value) {
 
     s->value = value;
     s->active=1;
+    return(0);
+}
+
+int sem_down(semaphore_t *s){
+    preempcaoAtiva = 0;
+    #ifdef DEBUG
+    printf("sem_down: Tarefa %d dando down, para valor %d\n", currentTask->tid, s->value-1);
+    #endif // DEBUG
+
+    // Checa se semaforo existe
+    if(!s) {
+        preempcaoAtiva = 1;
+        return(-1);
+    }
+
+    if(--(s->value) < 0) {
+        task_suspend(NULL, (queue_t**)&s->suspendedQueue);
+        // suspend religa preempcao no final
+    }
+
+    preempcaoAtiva = 1;
+    // Retornar -1 se semaforo foi destruido
+    if(!s->active) {
+        return(-1);
+    }
     return(0);
 }
