@@ -6,18 +6,17 @@
 #define NUMACOES 5
 #define NUMPROD 3
 #define NUMCONS 2
-#define SIZEBUFFER 10
 
 buffer buff;
 
-samephore_t s_vaga;
-samephore_t s_buffer;
-samephore_t s_item;
+semaphore_t s_vaga;
+semaphore_t s_buffer;
+semaphore_t s_item;
 
 task_t task_prod[NUMPROD];
 task_t task_cons[NUMCONS];
 
-void produtor(int id) {
+void produtor(void* id) {
     int i, produzido;
 
     for(i = 0; i < NUMACOES; ++i) {
@@ -28,14 +27,14 @@ void produtor(int id) {
 
         produzido = rand()%100;
         buffer_insert(&buff, produzido);
-        printf("p%d produziu %d\n", id, produzido);
+        printf("Task %d produziu %d\n", task_id(), produzido);
 
         sem_up(&s_buffer);
         sem_up(&s_item);
     }
 }
 
-void consumidor(int id) {
+void consumidor(void* id) {
     int i, consumido;
 
     for(i = 0; i < NUMACOES; ++i) {
@@ -45,7 +44,7 @@ void consumidor(int id) {
         sem_down(&s_buffer);
 
         consumido = buffer_remove(&buff);
-        printf("c%d consumiu %d\n", id, consumido);
+        printf("Task %d consumiu %d\n", task_id(), consumido);
 
         sem_up(&s_buffer);
         sem_up(&s_vaga);
@@ -61,17 +60,17 @@ int main() {
     sem_create(&s_vaga, SIZEBUFFER);
     sem_create(&s_item, 0);
 
-    for(i = 0; i < NUMPROD, ++i) {
-        task_create(&task_prod[i], produtor, i);
+    for(i = 0; i < NUMPROD; ++i) {
+        task_create(&task_prod[i], produtor, "Blargh");
     }
-    for(i = 0; i < NUMCONS, ++i) {
-        task_create(&task_cons[i], consumidor, i);
+    for(i = 0; i < NUMCONS; ++i) {
+        task_create(&task_cons[i], consumidor, "Blergh");
     }
 
-    for(i = 0; i < NUMPROD, ++i) {
+    for(i = 0; i < NUMPROD; ++i) {
         task_join(&task_prod[i]);
     }
-    for(i = 0; i < NUMCONS, ++i) {
+    for(i = 0; i < NUMCONS; ++i) {
         task_join(&task_cons[i]);
     }
 
