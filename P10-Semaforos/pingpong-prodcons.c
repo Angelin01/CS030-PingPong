@@ -4,6 +4,8 @@
 #include "queue.h"
 
 #define NUMACOES 5
+#define NUMPROD 3
+#define NUMCONS 2
 
 typedef struct buffer {
     struct buffer* prev;
@@ -16,10 +18,11 @@ samephore_t s_vaga;
 samephore_t s_buffer;
 samephore_t s_item;
 
-task p1, p2, p3, c1, c2;
+task_t task_prod[NUMPROD];
+task_t task_cons[NUMCONS];
 
-void produtor(void* blah) {
-    int i;
+void produtor(int id) {
+    int i, produzido;
 
     for(i = 0; i < NUMACOES; ++i) {
         task_sleep(1);
@@ -28,14 +31,15 @@ void produtor(void* blah) {
         sem_down(&s_buffer);
 
         // Insere elemento
+        printf("p%d produziu %d\n", id, produzido);
 
         sem_up(&s_buffer);
         sem_up(&s_item);
     }
 }
 
-void consumidor(void* bleh) {
-    int i;
+void consumidor(int id) {
+    int i, consumido;
 
     for(i = 0; i < NUMACOES; ++i) {
         task_sleep(1);
@@ -44,6 +48,7 @@ void consumidor(void* bleh) {
         sem_down(&s_buffer);
 
         // Retira elemento
+        printf("c%d consumiu %d\n", id, consumido);
 
         sem_up(&s_buffer);
         sem_up(&s_vaga);
@@ -51,21 +56,25 @@ void consumidor(void* bleh) {
 }
 
 int main() {
+    int i;
+
     sem_create(&s_buffer, 1);
     sem_create(&s_vaga, 2);
     sem_create(&s_item, 5);
 
-    task_create(&p1, produtor, "Blargh");
-    task_create(&p2, produtor, "Blargh");
-    task_create(&p3, produtor, "Blargh");
-    task_create(&c1, consumidor, "Blargh");
-    task_create(&c2, consumidor, "Blargh");
+    for(i = 0; i < NUMPROD, ++i) {
+        task_create(&task_prod[i], produtor, i);
+    }
+    for(i = 0; i < NUMCONS, ++i) {
+        task_create(&task_cons[i], consumidor, i);
+    }
 
-    task_join(&p1);
-    task_join(&p2);
-    task_join(&p3);
-    task_join(&c1);
-    task_join(&c2);
+    for(i = 0; i < NUMPROD, ++i) {
+        task_join(&task_prod[i]);
+    }
+    for(i = 0; i < NUMCONS, ++i) {
+        task_join(&task_cons[i]);
+    }
 
     sem_destroy(&s_buffer);
     sem_destroy(&s_vaga);
