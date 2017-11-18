@@ -3,7 +3,7 @@
 #include "pingpong.h"
 #include "buffer.h"
 
-#define NUMACOES 5
+#define NUMACOES 15
 #define NUMPROD 3
 #define NUMCONS 2
 
@@ -44,7 +44,7 @@ void consumidor(void* id) {
         sem_down(&s_buffer);
 
         consumido = buffer_remove(&buff);
-        printf("Task %d consumiu %d\n", task_id(), consumido);
+        printf("                    Task %d consumiu %d\n", task_id(), consumido);
 
         sem_up(&s_buffer);
         sem_up(&s_vaga);
@@ -59,6 +59,8 @@ int main() {
     sem_create(&s_buffer, 1);
     sem_create(&s_vaga, SIZEBUFFER);
     sem_create(&s_item, 0);
+
+    pingpong_init();
 
     for(i = 0; i < NUMPROD; ++i) {
         task_create(&task_prod[i], produtor, "Blargh");
