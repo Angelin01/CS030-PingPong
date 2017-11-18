@@ -31,7 +31,7 @@ void taskBody(void *id)
 int main (int argc, char *argv[])
 {
    int i ;
-   
+
    printf ("Main INICIO\n") ;
 
    pingpong_init () ;
