@@ -1,18 +1,14 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "pingpong.h"
-#include "queue.h"
+#include "buffer.h"
 
 #define NUMACOES 5
 #define NUMPROD 3
 #define NUMCONS 2
+#define SIZEBUFFER 10
 
-typedef struct buffer {
-    struct buffer* prev;
-    struct buffer* next;
-
-    int value;
-}
+buffer buff;
 
 samephore_t s_vaga;
 samephore_t s_buffer;
@@ -58,9 +54,11 @@ void consumidor(int id) {
 int main() {
     int i;
 
+    buffer_create(&buff);
+
     sem_create(&s_buffer, 1);
-    sem_create(&s_vaga, 2);
-    sem_create(&s_item, 5);
+    sem_create(&s_vaga, SIZEBUFFER);
+    sem_create(&s_item, 0);
 
     for(i = 0; i < NUMPROD, ++i) {
         task_create(&task_prod[i], produtor, i);
