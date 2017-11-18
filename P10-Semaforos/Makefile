@@ -1,9 +1,9 @@
 # Code stuffs
-INCL = queue.h datatypes.h pingpong.h
+INCL = queue.h datatypes.h pingpong.h buffer.h
 EXE1 = pingpong-racecond
 EXE2 = pingpong-semaphore
 EXE3 = pingpong-prodcons
-CFILES = queue.c pingpong.c
+CFILES = queue.c pingpong.c buffer.c
 OBJS = $(CFILES:.c=.o)
 LIBS =
 
