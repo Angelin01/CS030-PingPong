@@ -26,7 +26,8 @@ void produtor(int id) {
         sem_down(&s_vaga);
         sem_down(&s_buffer);
 
-        // Insere elemento
+        produzido = rand()%100;
+        buffer_insert(&buff, produzido);
         printf("p%d produziu %d\n", id, produzido);
 
         sem_up(&s_buffer);
@@ -43,7 +44,7 @@ void consumidor(int id) {
         sem_down(&s_item);
         sem_down(&s_buffer);
 
-        // Retira elemento
+        consumido = buffer_remove(&buff);
         printf("c%d consumiu %d\n", id, consumido);
 
         sem_up(&s_buffer);
