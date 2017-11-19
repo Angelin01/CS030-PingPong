@@ -73,6 +73,7 @@ typedef struct
 // estrutura que define uma barreira
 typedef struct {
     int maxTasks;
+    int numTasks;
 
     // Suspensao
     struct task_t* suspendedQueue;

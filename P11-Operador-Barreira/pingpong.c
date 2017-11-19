@@ -501,6 +501,38 @@ int barrier_create(barrier_t* b, int N) {
     #endif // DEBUG
 
     b->maxTasks = N;
+    b->numTasks = 0;
     b->active = 1;
+    return(0);
+}
+
+int barrier_join(barrier_t* b) {
+    preempcaoAtiva = 0;
+    if(!b || b->active = 0) {
+        preempcaoAtiva = 1;
+        return(-1);
+    }
+    #ifdef DEBUG
+    printf("Task %d parando em barreira\n", task_id());
+    #endif // DEBUG
+
+    // Se chegou ao limite de tasks na barreira
+    if(b->numTasks >= b->maxTasks - 1) {
+        while(b->suspendedQueue) {
+            task_resume(b->suspendedQueue);
+        }
+        // Renicializa barreira
+        b->numTasks = 0;
+        preempcaoAtiva = 1;
+        return(0);
+    }
+
+    // Se nao chegou ao limite de tasks
+    ++b->numTasks;
+    task_suspend(NULL, &b->suspendedQueue); // Religa preempcao internamente
+    // Se barreira for destruida, retornar -1
+    if(!b) {
+        return(-1);
+    }
     return(0);
 }
