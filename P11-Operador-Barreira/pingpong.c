@@ -508,7 +508,7 @@ int barrier_create(barrier_t* b, int N) {
 
 int barrier_join(barrier_t* b) {
     preempcaoAtiva = 0;
-    if(!b || b->active = 0) {
+    if(!b || !b->active) {
         preempcaoAtiva = 1;
         return(-1);
     }
@@ -539,7 +539,7 @@ int barrier_join(barrier_t* b) {
 
 int barrier_destroy(barrier_t* b) {
     preempcaoAtiva = 0;
-    if(!b || b->active = 0) {
+    if(!b || !b->active) {
         preempcaoAtiva = 1;
         return(-1);
     }
