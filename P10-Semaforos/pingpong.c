@@ -247,7 +247,7 @@ void dispatcher_body() {
                 if(toWake->wakeTime <= currentTime) { // Se passou da hora de acordar
                     task_resume(toWake);
                 }
-            } while (sleepQueue && auxWake->next != sleepQueue);
+            } while (sleepQueue && auxWake != sleepQueue);
 		}
 
         next = scheduler(); // NULL se a fila está vazia
