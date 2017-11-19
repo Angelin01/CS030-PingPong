@@ -487,3 +487,20 @@ int sem_destroy(semaphore_t *s) {
     preempcaoAtiva = 1;
     return(0);
 }
+
+/* ----------------- */
+/*     Barreiras     */
+/* ----------------- */
+
+int barrier_create(barrier_t* b, int N) {
+    if(!b || N <= 0) {
+        return(-1);
+    }
+    #ifdef DEBUG
+    printf("Criando barreira com limite %d\n", N);
+    #endif // DEBUG
+
+    b->maxTasks = N;
+    b->active = 1;
+    return(0);
+}

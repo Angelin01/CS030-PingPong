@@ -57,11 +57,11 @@ typedef struct task_t {
 
 // estrutura que define um semáforo
 typedef struct {
-  int value;
+    int value;
 
   // Suspensao
-  struct task_t* suspendedQueue;
-  int active;
+    struct task_t* suspendedQueue;
+    int active;
 } semaphore_t ;
 
 // estrutura que define um mutex
@@ -71,9 +71,12 @@ typedef struct
 } mutex_t ;
 
 // estrutura que define uma barreira
-typedef struct
-{
-  // preencher quando necessário
+typedef struct {
+    int maxTasks;
+
+    // Suspensao
+    struct task_t* suspendedQueue;
+    int active;
 } barrier_t ;
 
 // estrutura que define uma fila de mensagens
