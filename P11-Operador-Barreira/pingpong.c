@@ -536,3 +536,22 @@ int barrier_join(barrier_t* b) {
     }
     return(0);
 }
+
+int barrier_destroy(barrier_t* b) {
+    preempcaoAtiva = 0;
+    if(!b || b->active = 0) {
+        preempcaoAtiva = 1;
+        return(-1);
+    }
+
+    // Acorda todas as tasks
+    while(b->suspendedQueue) {
+        task_resume(b->suspendedQueue);
+    }
+    b->numTasks = 0;
+    // Desliga barreira
+    b->active = 0;
+
+    preempcaoAtiva = 1;
+    return(0);
+}
