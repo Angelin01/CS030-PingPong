@@ -1,7 +1,7 @@
 # Code stuffs
-INCL = queue.h datatypes.h pingpong.h buffer.h
+INCL = queue.h datatypes.h pingpong.h
 EXE1 = pingpong-barrier
-CFILES = queue.c pingpong.c buffer.c
+CFILES = queue.c pingpong.c
 OBJS = $(CFILES:.c=.o)
 LIBS =
 
