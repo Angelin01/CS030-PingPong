@@ -661,3 +661,35 @@ int mqueue_msgs(mqueue_t* queue) {
     return(queue->numMsg);
 }
 
+int mqueue_destroy(mqueue_t* queue) {
+    // Tem que desligar preempcao parar evitar que uma tarefa tente escrever no meio da destruicao
+    preempcaoAtiva = 0;
+    if(!queue || !queue->active) {
+        preempcaoAtiva = 1;
+        return(-1);
+    }
+
+    // Desaloca buffer
+    free(queue->buffer);
+
+    // Destroi semaforos
+    if(sem_destroy(queue->s_buffer) != 0) {
+         preempcaoAtiva = 1;
+         return(-1);
+    }
+    if(sem_destroy(queue->s_item) != 0) {
+         preempcaoAtiva = 1;
+         return(-1);
+    }
+    if(sem_destroy(queue->s_vaga) != 0) {
+         preempcaoAtiva = 1;
+         return(-1);
+    }
+
+    queue->numMsg = 0;
+
+    // Desliga queue
+    queue->active = 0;
+    preempcaoAtiva = 1;
+    return(0);
+}
