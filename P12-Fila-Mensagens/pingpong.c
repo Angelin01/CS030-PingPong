@@ -578,13 +578,13 @@ int mqueue_create(mqueue_t* queue, int max, int size) {
     queue->numMsg = 0;
 
     // Semaforos internos
-    if(sem_create(&queue->s_buffer, 1)) {
+    if(sem_create(&queue->s_buffer, 1) != 0) {
         return(-1);
     }
-    if(sem_create(&queue->s_vaga, max)) {
+    if(sem_create(&queue->s_vaga, max) != 0) {
         return(-1);
     }
-    if(sem_create(&queue->s_item, 0)) {
+    if(sem_create(&queue->s_item, 0) != 0) {
         return(-1);
     }
 
@@ -603,15 +603,25 @@ int mqueue_send(mqueue_t* queue, void* msg) {
         return(-1);
     }
 
-    sem_down(&queue->s_vaga);
-    sem_down(&queue->buffer);
+    // Devem ter wrap pois semaforo pode ser destruido no destruir queue
+    if(sem_down(&queue->s_vaga) != 0) {
+        return(-1);
+    }
+    if(sem_down(&queue->buffer) != 0) {
+        return(-1)
+    }
 
     //     Ponteiro      + Offset do "vetor de msg"
     memcpy(queue->buffer + queue->numMsg*queue->msgSize, msg, queue->msgSize);
     ++queue->numMsg;
 
-    sem_up(&queue->buffer);
-    sem_up(&queue->s_item);
+    // Devem ter wrap pois semaforo pode ser destruido no destruir queue
+    if(sem_up(&queue->buffer) != 0) {
+        return(-1);
+    }
+    if(sem_up(&queue->s_item) != 0) {
+        return(-1);
+    }
 
     return(0);
 }
@@ -621,15 +631,24 @@ int mqueue_recv(mqueue_t* queue, void* msg) {
         return(-1);
     }
 
-    sem_down(&queue->s_item);
-    sem_down(&queue->buffer);
+    // Devem ter wrap pois semaforo pode ser destruido no destruir queue
+    if(sem_down(&queue->s_item) != 0) {
+        return(-1);
+    }
+    if(sem_down(&queue->buffer) != 0) {
+        return(-1)
+    }
 
     memcpy(msg, queue->buffer, queue->msgSize);
     --(queue->numMsg);
     memmove(queue->buffer, queue->buffer + queue->msgSize, queue->numMsg * queue->msgSize); // memcpy nao seguro para overlap
 
-    sem_up(&queue->buffer);
-    sem_up(&queue->s_vaga);
+    if(sem_up(&queue->buffer) != 0) {
+        return(-1);
+    }
+    if(sem_up(&queue->s_vaga) != 0) {
+        return(-1);
+    }
 
     return(0);
 }
@@ -641,3 +660,4 @@ int mqueue_msgs(mqueue_t* queue) {
 
     return(queue->numMsg);
 }
+
