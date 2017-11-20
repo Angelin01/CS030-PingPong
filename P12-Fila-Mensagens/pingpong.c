@@ -3,7 +3,7 @@
 #include <ucontext.h>
 #include <sys/time.h>
 #include <signal.h>
-#include <strings.h>
+#include <string.h>
 #include "pingpong.h"
 #include "datatypes.h"
 #include "queue.h"
@@ -11,7 +11,7 @@
 #define ERRSTACK -10 // Comecar os erros mais para tras pq sim
 #define ERRSIGNAL -11
 #define ERRTIMER -12
-#define QUANTUM 20
+#define QUANTUM 20s
 
 // Valores numéricos
 long idcounter = 1;
@@ -590,10 +590,28 @@ int mqueue_create(mqueue_t* queue, int max, int size) {
     }
 
     // Aloca vetor de tamanho (msgSize * maxMsgs) bytes
-    queue->buffer = malloc(sizeof(char) * size * max);
+    queue->buffer = malloc(size * max);
     if(!queue->buffer) { // Pode ficar sem memoria, suponho
         return(-1);
     }
+
+    return(0);
+}
+
+int mqueue_send(mqueue_t* queue, void* msg) {
+    if(!queue || !queue->active || !msg) {
+        return(-1);
+    }
+
+    sem_down(&queue->s_vaga);
+    sem_down(&queue->buffer);
+
+    //     Ponteiro      + Offset do "vetor de msg"
+    memcpy(queue->buffer + queue->numMsg*queue->msgSize, msg, queue->msgSize);
+    ++queue->numMsg;
+
+    sem_up(&queue->buffer);
+    sem_up(&queue->s_item);
 
     return(0);
 }
