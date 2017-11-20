@@ -3,6 +3,7 @@
 #include <ucontext.h>
 #include <sys/time.h>
 #include <signal.h>
+#include <strings.h>
 #include "pingpong.h"
 #include "datatypes.h"
 #include "queue.h"
@@ -416,7 +417,7 @@ int sem_create(semaphore_t *s, int value) {
     printf("Criando semáforo com valor %d\n", value);
     #endif // DEBUG
 
-    if(!s) {
+    if(!s || s->active) {
         return(-1);
     }
 
@@ -493,7 +494,7 @@ int sem_destroy(semaphore_t *s) {
 /* ----------------- */
 
 int barrier_create(barrier_t* b, int N) {
-    if(!b || N <= 0) {
+    if(!b || N <= 0 || b->active) {
         return(-1);
     }
     #ifdef DEBUG
@@ -538,6 +539,47 @@ int barrier_join(barrier_t* b) {
 }
 
 int barrier_destroy(barrier_t* b) {
+
+/* ----------------- */
+/*     Mensagens     */
+/* ----------------- */
+
+int mqueue_create(mqueue_t* queue, int max, int size) {
+    if(!queue || queue->active) {
+        return(-1);
+    }
+    if(max <= 0 || size <= 0) {
+        return(-1);
+    }
+
+    #ifdef DEBUG
+    printf("Criando mqueue de tamanho %d com mensagens de %d bytes\n", max, size)
+    #endif // DEBUG
+
+    // Seta parametros da mqueue
+    queue->msgSize = size;
+    queue->maxMsg = max;
+    queue->numMsg = 0;
+
+    // Semaforos internos
+    if(sem_create(&queue->s_buffer, 1)) {
+        return(-1);
+    }
+    if(sem_create(&queue->s_vaga, max)) {
+        return(-1);
+    }
+    if(sem_create(&queue->s_item, 0)) {
+        return(-1);
+    }
+
+    // Aloca vetor de tamanho (msgSize * maxMsgs) bytes
+    queue->buffer = malloc(sizeof(char) * size * max);
+    if(!queue->buffer) { // Pode ficar sem memoria, suponho
+        return(-1);
+    }
+
+    return(0);
+}
     preempcaoAtiva = 0;
     if(!b || !b->active) {
         preempcaoAtiva = 1;

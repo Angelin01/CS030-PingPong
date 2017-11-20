@@ -416,7 +416,7 @@ int sem_create(semaphore_t *s, int value) {
     printf("Criando semáforo com valor %d\n", value);
     #endif // DEBUG
 
-    if(!s) {
+    if(!s || s->active) {
         return(-1);
     }
 

@@ -416,7 +416,7 @@ int sem_create(semaphore_t *s, int value) {
     printf("Criando semáforo com valor %d\n", value);
     #endif // DEBUG
 
-    if(!s) {
+    if(!s || s->active) {
         return(-1);
     }
 
@@ -493,7 +493,7 @@ int sem_destroy(semaphore_t *s) {
 /* ----------------- */
 
 int barrier_create(barrier_t* b, int N) {
-    if(!b || N <= 0) {
+    if(!b || N <= 0 || b->active) {
         return(-1);
     }
     #ifdef DEBUG

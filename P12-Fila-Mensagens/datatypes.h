@@ -93,7 +93,10 @@ typedef struct {
     semaphore_t s_buffer;
 
     // Fila em si
-    void* mqueue;
+    void* buffer;
+
+    // Flag de ativo
+    int active;
 } mqueue_t ;
 
 #endif
