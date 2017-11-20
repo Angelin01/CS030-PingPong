@@ -53,7 +53,7 @@ void consumidor(void* id) {
 
 int main() {
     int i;
-
+	
     buffer_create(&buff);
 
     sem_create(&s_buffer, 1);

@@ -12,7 +12,7 @@ int buffer_remove(buffer* buff) {
     int i;
     int toRemove = buff->slot[0];
 
-    for(i = 0; i < buff->i; ++i) {
+    for(i = 1; i < buff->i; ++i) {
         buff->slot[i-1] = buff->slot[i];
     }
     --buff->i;
