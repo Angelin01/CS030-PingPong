@@ -594,6 +594,7 @@ int mqueue_create(mqueue_t* queue, int max, int size) {
         return(-1);
     }
 
+    queue->active = 1;
     return(0);
 }
 
@@ -631,4 +632,12 @@ int mqueue_recv(mqueue_t* queue, void* msg) {
     sem_up(&queue->s_vaga);
 
     return(0);
+}
+
+int mqueue_msgs(mqueue_t* queue) {
+    if(!queue || !queue->active) {
+        return(-1);
+    }
+
+    return(queue->numMsg);
 }
