@@ -575,7 +575,6 @@ int mqueue_create(mqueue_t* queue, int max, int size) {
 
     // Seta parametros da mqueue
     queue->msgSize = size;
-    queue->maxMsg = max;
     queue->numMsg = 0;
 
     // Semaforos internos
@@ -612,6 +611,24 @@ int mqueue_send(mqueue_t* queue, void* msg) {
 
     sem_up(&queue->buffer);
     sem_up(&queue->s_item);
+
+    return(0);
+}
+
+int mqueue_recv(mqueue_t* queue, void* msg) {
+    if(!queue || !queue->active || !msg) {
+        return(-1);
+    }
+
+    sem_down(&queue->s_item);
+    sem_down(&queue->buffer);
+
+    memcpy(msg, queue->buffer, queue->msgSize);
+    --(queue->numMsg);
+    memmove(queue->buffer, queue->buffer + queue->msgSize, queue->numMsg * queue->msgSize); // memcpy nao seguro para overlap
+
+    sem_up(&queue->buffer);
+    sem_up(&queue->s_vaga);
 
     return(0);
 }

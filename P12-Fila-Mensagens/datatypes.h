@@ -84,7 +84,6 @@ typedef struct {
 typedef struct {
     // Parametros da fila
     int msgSize;
-    int maxMsg;
     int numMsg;
 
     // Semaforos internos
