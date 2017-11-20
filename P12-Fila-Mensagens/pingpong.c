@@ -11,7 +11,7 @@
 #define ERRSTACK -10 // Comecar os erros mais para tras pq sim
 #define ERRSIGNAL -11
 #define ERRTIMER -12
-#define QUANTUM 20s
+#define QUANTUM 20
 
 // Valores numéricos
 long idcounter = 1;
@@ -607,8 +607,8 @@ int mqueue_send(mqueue_t* queue, void* msg) {
     if(sem_down(&queue->s_vaga) != 0) {
         return(-1);
     }
-    if(sem_down(&queue->buffer) != 0) {
-        return(-1)
+    if(sem_down(&queue->s_buffer) != 0) {
+        return(-1);
     }
 
     //     Ponteiro      + Offset do "vetor de msg"
@@ -616,7 +616,7 @@ int mqueue_send(mqueue_t* queue, void* msg) {
     ++queue->numMsg;
 
     // Devem ter wrap pois semaforo pode ser destruido no destruir queue
-    if(sem_up(&queue->buffer) != 0) {
+    if(sem_up(&queue->s_buffer) != 0) {
         return(-1);
     }
     if(sem_up(&queue->s_item) != 0) {
@@ -635,15 +635,15 @@ int mqueue_recv(mqueue_t* queue, void* msg) {
     if(sem_down(&queue->s_item) != 0) {
         return(-1);
     }
-    if(sem_down(&queue->buffer) != 0) {
-        return(-1)
+    if(sem_down(&queue->s_buffer) != 0) {
+        return(-1);
     }
 
     memcpy(msg, queue->buffer, queue->msgSize);
     --(queue->numMsg);
     memmove(queue->buffer, queue->buffer + queue->msgSize, queue->numMsg * queue->msgSize); // memcpy nao seguro para overlap
 
-    if(sem_up(&queue->buffer) != 0) {
+    if(sem_up(&queue->s_buffer) != 0) {
         return(-1);
     }
     if(sem_up(&queue->s_vaga) != 0) {
@@ -673,15 +673,15 @@ int mqueue_destroy(mqueue_t* queue) {
     free(queue->buffer);
 
     // Destroi semaforos
-    if(sem_destroy(queue->s_buffer) != 0) {
+    if(sem_destroy(&queue->s_buffer) != 0) {
          preempcaoAtiva = 1;
          return(-1);
     }
-    if(sem_destroy(queue->s_item) != 0) {
+    if(sem_destroy(&queue->s_item) != 0) {
          preempcaoAtiva = 1;
          return(-1);
     }
-    if(sem_destroy(queue->s_vaga) != 0) {
+    if(sem_destroy(&queue->s_vaga) != 0) {
          preempcaoAtiva = 1;
          return(-1);
     }

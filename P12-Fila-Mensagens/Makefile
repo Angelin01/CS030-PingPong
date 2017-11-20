@@ -18,14 +18,14 @@ default: $(EXE1)
 	
 # Link objects into binary
 $(EXE1): $(OBJS) $(EXE1).o
-	$(GCC) $(LIBS) $(OBJS) $(EXE1).o -o $@
+	$(GCC) $(OBJS) $(EXE1).o $(LIBS) -o $@
 		
 # Object library depency
 $(OBJS): $(INCL)
 
 # Debug executable
 debug:
-	$(GCC) $(LIBS) $(DEBUGFLAGS) $(CFILES) $(EXE1).c -o $(EXE1)_debug
+	$(GCC) $(DEBUGFLAGS) $(CFILES) $(EXE1).c $(LIBS) -o $(EXE1)_debug
 
 # Clean
 clean:
