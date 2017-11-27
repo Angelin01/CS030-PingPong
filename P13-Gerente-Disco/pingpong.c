@@ -805,7 +805,7 @@ int disk_block_read(int block, void *buffer) {
     #endif // DEBUG
 
     // Obtem semaforo
-    if(!sem_down(&disk.s_disk)) {
+    if(sem_down(&disk.s_disk) != 0) {
         return(-1);
     }
 
@@ -814,7 +814,7 @@ int disk_block_read(int block, void *buffer) {
     if(request == NULL) {
         return(-1);
     }
-    if(!disk_request_create(request, currentTask, DISK_CMD_READ, buffer, block)) {
+    if(disk_request_create(request, currentTask, DISK_CMD_READ, buffer, block) != 0) {
         return(-1);
     }
 
@@ -827,7 +827,7 @@ int disk_block_read(int block, void *buffer) {
     }
 
     // Libera semaforo
-    if(!sem_up(&disk.s_disk)) {
+    if(sem_up(&disk.s_disk) != 0) {
         return(-1);
     }
 
@@ -846,7 +846,7 @@ int disk_block_write(int block, void *buffer) {
     #endif // DEBUG
 
     // Obtem semaforo
-    if(!sem_down(&disk.s_disk)) {
+    if(sem_down(&disk.s_disk) != 0) {
         return(-1);
     }
 
@@ -855,7 +855,7 @@ int disk_block_write(int block, void *buffer) {
     if(request == NULL) {
         return(-1);
     }
-    if(!disk_request_create(request, currentTask, DISK_CMD_WRITE, buffer, block)) {
+    if(disk_request_create(request, currentTask, DISK_CMD_WRITE, buffer, block) != 0) {
         return(-1);
     }
 
@@ -868,7 +868,7 @@ int disk_block_write(int block, void *buffer) {
     }
 
     // Libera semaforo
-    if(!sem_up(&disk.s_disk)) {
+    if(sem_up(&disk.s_disk) != 0) {
         return(-1);
     }
 
