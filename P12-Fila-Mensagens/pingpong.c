@@ -162,7 +162,7 @@ void task_exit(int exitCode) {
     task_t* toResume = currentTask->suspendedQueue;
     task_t* auxResume;
 
-    printf("Task %d exit: execution time %d ms, processor time %d ms, %d activations\n", currentTask->tid, miliTime - currentTask->startTime, currentTask->cpuTime, currentTask->activations);
+    printf("Task %d exit: execution time %u ms, processor time %u ms, %u activations\n", currentTask->tid, miliTime - currentTask->startTime, currentTask->cpuTime, currentTask->activations);
 
     if(currentTask->suspendedQueue) {
         auxResume = toResume->next;
