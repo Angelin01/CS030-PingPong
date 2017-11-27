@@ -31,6 +31,7 @@ task_t diskManager;
 
 // Disco
 disk_t disk;
+struct sigaction diskSignal;
 
 // Preempção
 struct sigaction quantumCheck;
@@ -40,6 +41,7 @@ int preempcaoAtiva;
 // Pré-declarações
 void dispatcher_body();
 void quantum_handler();
+void disk_op_ready();
 
 void pingpong_init() {
     #ifdef DEBUG
@@ -92,6 +94,23 @@ void pingpong_init() {
     currentTask = &mainTask;
     queue_append((queue_t**)&taskQueue, (queue_t*)&mainTask);
     mainTask.currentQueue = &taskQueue;
+
+    /* --------------- */
+    /* Coisas do disco */
+    /* --------------- */
+
+    diskdriver_init(&disk.numBlocks, &disk.blockSize);
+    task_create(&diskManager, diskManager_body, "Toothless is love, Toothless is life");
+    diskManager.userTask = 0;
+
+    // Interrupcao de disco
+    diskSignal.sa_handler = disk_op_ready;
+    sigemptyset(&diskSignal.sa_mask);
+    diskSignal.sa_flags = 0;
+    if(sigaction(SIGUSR1, &diskSignal, 0) < 0) {
+        perror("Erro no sigaction: ");
+        exit(ERRSIGNAL);
+    }
 
     /* -------------------- */
     /* Coisas do dispatcher */
@@ -705,7 +724,24 @@ int mqueue_destroy(mqueue_t* queue) {
 /* ------------------------ */
 
 void diskManager_body(void* arg) {
+    disk_request* request;
+    while(1) {
+        sem_down(&disk.s_disk);
 
+        if(disk.opComplete > 0) {
+            task_resume(disk.suspendedQueue);
+            --disk.opComplete;
+        }
+
+        if(disk_cmd(DISK_CMD_STATUS, 0, 0) == 1 && disk.requestQueue) {
+            request = queue_remove((queue_t**)&disk.requestQueue, (queue_t*)disk.requestQueue);
+            disk_cmd(request->operation, request->block, request->buffer);
+            free(request);
+        }
+
+        sem_up(&disk.s_disk);
+        task_suspend(NULL, NULL);
+    }
 }
 
 int diskdriver_init(int* numBlocks, int* blockSize) {
@@ -713,9 +749,10 @@ int diskdriver_init(int* numBlocks, int* blockSize) {
         return(-1);
     }
 
-    #ifdef DEBUG
-    printf("Criando disco com %d blocos de %d bytes\n", *numBlocks, *blockSize);
-    #endif // DEBUG
+    // Iniciliza disco
+    if(!disk_cmd(DISK_CMD_INIT, 0, 0)) {
+        return(-1);
+    }
 
     // Consulta o disco em si
     if(disk.numBlocks = disk_cmd(DISK_CMD_DISKSIZE, 0, 0) < 0) {
@@ -759,6 +796,7 @@ int disk_request_create(disk_request* request, task_t* task, int operation, void
 }
 
 int disk_block_read(int block, void *buffer) {
+    disk_request* request;
     if(block < 0 || !buffer) {
         return(-1);
     }
@@ -767,10 +805,78 @@ int disk_block_read(int block, void *buffer) {
     printf("Task %d lendo bloco %d do disco\n", currentTask->tid, block);
     #endif // DEBUG
 
-    sem_down(disk.s_disk);
+    // Obtem semaforo
+    if(!sem_down(&disk.s_disk)) {
+        return(-1);
+    }
 
+    // Cria request
+    request = malloc(sizeof(disk_t));
+    if(request == NULL) {
+        return(-1);
+    }
+    if(!disk_request_create(request, currentTask, DISK_CMD_READ, buffer, block)) {
+        return(-1);
+    }
 
+    // Coloca request na fila de requests
+    queue_append((queue_t**)&disk.requestQueue, (queue_t*)request);
 
+    // Acorda gerente de disco se dormindo
+    if(diskManager.state == suspended) {
+        task_resume(&diskManager);
+    }
+
+    // Libera semaforo
+    if(!sem_up(&disk.s_disk)) {
+        return(-1);
+    }
+
+    task_suspend(NULL, &disk.suspendedQueue);
+    return(0);
 }
 
-int disk_block_write(int block, void *buffer){}
+int disk_block_write(int block, void *buffer) {
+    disk_request* request;
+    if(block < 0 || !buffer) {
+        return(-1);
+    }
+
+    #ifdef DEBUG
+    printf("Task %d lendo bloco %d do disco\n", currentTask->tid, block);
+    #endif // DEBUG
+
+    // Obtem semaforo
+    if(!sem_down(&disk.s_disk)) {
+        return(-1);
+    }
+
+    // Cria request
+    request = malloc(sizeof(disk_t));
+    if(request == NULL) {
+        return(-1);
+    }
+    if(!disk_request_create(request, currentTask, DISK_CMD_WRITE, buffer, block)) {
+        return(-1);
+    }
+
+    // Coloca request na fila de requests
+    queue_append((queue_t**)&disk.requestQueue, (queue_t*)request);
+
+    // Acorda gerente de disco se suspenso ou dormindo
+    if(diskManager.state == suspended) {
+        task_resume(&diskManager);
+    }
+
+    // Libera semaforo
+    if(!sem_up(&disk.s_disk)) {
+        return(-1);
+    }
+
+    task_suspend(NULL, &disk.suspendedQueue);
+    return(0);
+}
+
+void disk_op_ready() {
+    disk.opComplete++;
+}
