@@ -745,6 +745,7 @@ void diskManager_body(void* arg) {
 }
 
 int diskdriver_init(int* numBlocks, int* blockSize) {
+    preempcaoAtiva = 0;
     if(!numBlocks || !blockSize) {
         return(-1);
     }
@@ -770,6 +771,7 @@ int diskdriver_init(int* numBlocks, int* blockSize) {
 	*blockSize = disk.blockSize;
 	disk.opComplete = 0;
 
+    preempcaoAtiva = 1;
 	return(0);
 }
 
@@ -878,7 +880,7 @@ int disk_block_write(int block, void *buffer) {
 
 void disk_op_ready() {
     preempcaoAtiva = 0;
-    disk.opComplete++;
+    ++disk.opComplete;
     if(diskManager.state == suspended) {
         task_resume(&diskManager);
     }
