@@ -32,11 +32,10 @@ typedef struct {
 	disk_request* requestQueue;
 
 	// Parametros do disco
-	unsigned int numBlocks;
-	unsigned int blockSize;
+	int numBlocks;
+	int blockSize;
 
 	// Flags do disco
-	int inUse;
 	int opComplete;
 } disk_t;
 

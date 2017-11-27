@@ -42,6 +42,7 @@ int preempcaoAtiva;
 void dispatcher_body();
 void quantum_handler();
 void disk_op_ready();
+void diskManager_body();
 
 void pingpong_init() {
     #ifdef DEBUG
@@ -260,7 +261,7 @@ void dispatcher_body() {
     task_t* auxWake;
 	unsigned int currentTime;
 
-    while(taskQueue || sleepQueue) { // Se fila estiver vazia, ACAAABOOOO
+    while(taskQueue || sleepQueue || disk.suspendedQueue) { // Se filas estiverem vazia, ACAAABOOOO
 		dispatcher.activations++;
 
 		// Verifica se deve acordar tarefas
@@ -734,7 +735,7 @@ void diskManager_body(void* arg) {
         }
 
         if(disk_cmd(DISK_CMD_STATUS, 0, 0) == 1 && disk.requestQueue) {
-            request = queue_remove((queue_t**)&disk.requestQueue, (queue_t*)disk.requestQueue);
+            request = (disk_request*) queue_remove((queue_t**)&disk.requestQueue, (queue_t*)disk.requestQueue);
             disk_cmd(request->operation, request->block, request->buffer);
             free(request);
         }
@@ -755,10 +756,10 @@ int diskdriver_init(int* numBlocks, int* blockSize) {
     }
 
     // Consulta o disco em si
-    if(disk.numBlocks = disk_cmd(DISK_CMD_DISKSIZE, 0, 0) < 0) {
+    if((disk.numBlocks = disk_cmd(DISK_CMD_DISKSIZE, 0, 0)) < 0) {
         return(-1);
     }
-    if(disk.blockSize = disk_cmd(DISK_CMD_BLOCKSIZE, 0, 0) < 0) {
+    if((disk.blockSize = disk_cmd(DISK_CMD_BLOCKSIZE, 0, 0)) < 0) {
         return(-1);
     }
 
@@ -770,6 +771,7 @@ int diskdriver_init(int* numBlocks, int* blockSize) {
     // Seta os valores
 	*numBlocks = disk.numBlocks;
 	*blockSize = disk.blockSize;
+	disk.opComplete = 0;
 
 	return(0);
 }
@@ -878,5 +880,10 @@ int disk_block_write(int block, void *buffer) {
 }
 
 void disk_op_ready() {
+    preempcaoAtiva = 0;
     disk.opComplete++;
+    if(diskManager.state == suspended) {
+        task_resume(&diskManager);
+    }
+    preempcaoAtiva = 1;
 }
