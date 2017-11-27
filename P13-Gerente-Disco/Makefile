@@ -6,7 +6,7 @@ OBJS = $(CFILES:.c=.o)
 
 # Compiler stuffs
 GCC = /usr/bin/gcc
-LIBS = -lm
+LIBS = -lm -lrt
 FLAGS = -Wall
 DEBUGFLAGS = -Wall -g -DDEBUG
 

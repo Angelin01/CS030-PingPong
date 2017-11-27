@@ -6,12 +6,24 @@
 
 #ifndef __DISKDRIVER__
 #define __DISKDRIVER__
+#include "datatypes.h"
 
 // structura de dados que representa o disco para o SO
-typedef struct
-{
-  // preencher com os campos necessarios
-} disk_t ;
+typedef struct {
+	// Semaforo do disco
+	semaphore_t s_disk;
+
+	// Tarefas esperando disco
+	task_t* suspendedQueue;
+
+	// Parametros do disco
+	unsigned int numBlocks;
+	unsigned int blockSize;
+
+	// Flags do disco
+	int inUse;
+	int opComplete;
+} disk_t;
 
 // inicializacao do driver de disco
 // retorna -1 em erro ou 0 em sucesso

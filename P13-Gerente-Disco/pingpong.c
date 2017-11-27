@@ -7,6 +7,8 @@
 #include "pingpong.h"
 #include "datatypes.h"
 #include "queue.h"
+#include "diskdriver.h"
+#include "harddisk.h"
 
 #define ERRSTACK -10 // Comecar os erros mais para tras pq sim
 #define ERRSIGNAL -11
@@ -25,6 +27,10 @@ task_t dispatcher;
 task_t* taskQueue;
 task_t* toFree;
 task_t* sleepQueue;
+task_t diskManager;
+
+// Disco
+disk_t disk;
 
 // Preempção
 struct sigaction quantumCheck;
@@ -692,4 +698,36 @@ int mqueue_destroy(mqueue_t* queue) {
     queue->active = 0;
     preempcaoAtiva = 1;
     return(0);
+}
+
+/* ------------------------ */
+/*     Gerente de Disco     */
+/* ------------------------ */
+
+void diskManager_body(void* arg) {
+
+}
+
+int diskdriver_init(int* numBlocks, int* blockSize) {
+    if(!numBlocks || !blockSize) {
+        return(-1);
+    }
+
+    #ifdef DEBUG
+    printf("Criando disco com %d blocos de %d bytes\n", *numBlocks, *blockSize);
+    #endif // DEBUG
+
+    // Consulta o disco em si
+    if(disk->numBlocks = disk_cmd(DISK_CMD_DISKSIZE, 0, 0) < 0){
+        return(-1);
+    }
+    if(disk->blockSize = disk_cmd(DISK_CMD_BLOCKSIZE, 0, 0) < 0){
+        return(-1);
+    }
+
+    // Seta os valores
+	*numBlocks = disk->numBlocks;
+	*blockSize = disk->blockSize;
+
+	return(0);
 }
