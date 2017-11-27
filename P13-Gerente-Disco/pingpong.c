@@ -96,6 +96,15 @@ void pingpong_init() {
     queue_append((queue_t**)&taskQueue, (queue_t*)&mainTask);
     mainTask.currentQueue = &taskQueue;
 
+    /* -------------------- */
+    /* Coisas do dispatcher */
+    /* -------------------- */
+    task_create(&dispatcher, dispatcher_body, NULL);
+    dispatcher.userTask = 0;
+	dispatcher.activations = 0;
+    queue_remove((queue_t**)&taskQueue, (queue_t*)&dispatcher);
+    dispatcher.currentQueue = NULL;
+
     /* --------------- */
     /* Coisas do disco */
     /* --------------- */
@@ -112,14 +121,8 @@ void pingpong_init() {
         exit(ERRSIGNAL);
     }
 
-    /* -------------------- */
-    /* Coisas do dispatcher */
-    /* -------------------- */
-    task_create(&dispatcher, dispatcher_body, NULL);
-    dispatcher.userTask = 0;
-	dispatcher.activations = 0;
-    queue_remove((queue_t**)&taskQueue, (queue_t*)&dispatcher);
-    dispatcher.currentQueue = NULL;
+    // Volta pra dispatcher
+
     task_switch(&dispatcher);
 }
 
@@ -142,12 +145,8 @@ int task_create(task_t *task, void (*start_func)(void *), void *arg) {
 
     // Seta task principal
     task->tmain = &mainTask;
-    if(arg) { // Chek se tem que passar argumento ou nao
-        makecontext(&(task->tContext), (void*) start_func, 1, arg);
-    }
-    else {
-        makecontext(&(task->tContext), (void*) start_func, 0);
-    }
+
+    makecontext(&(task->tContext), (void*) start_func, 1, arg);
 
     queue_append((queue_t**)&taskQueue, (queue_t*)task);
     task->currentQueue = &taskQueue; // Para suspend no futuro
@@ -595,7 +594,7 @@ int mqueue_create(mqueue_t* queue, int max, int size) {
     }
 
     #ifdef DEBUG
-    printf("Criando mqueue de tamanho %d com mensagens de %d bytes\n", max, size)
+    printf("Criando mqueue de tamanho %d com mensagens de %d bytes\n", max, size);
     #endif // DEBUG
 
     // Seta parametros da mqueue
@@ -728,7 +727,7 @@ void diskManager_body(void* arg) {
     while(1) {
         sem_down(&disk.s_disk);
 
-        if(disk.opComplete > 0) {
+        while(disk.opComplete > 0) {
             task_resume(disk.suspendedQueue);
             --disk.opComplete;
         }
