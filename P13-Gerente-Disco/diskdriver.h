@@ -8,13 +8,28 @@
 #define __DISKDRIVER__
 #include "datatypes.h"
 
+typedef struct disk_request {
+    // Filas
+    struct disk_request* prev;
+    struct disk_request* next;
+
+    // Tarefa que fez o pedido
+    task_t* task;
+
+    // Parametros da request
+    int operation; // Read ou write (usar os defines ja prontos)
+    void* buffer;
+    int block;
+} disk_request;
+
 // structura de dados que representa o disco para o SO
 typedef struct {
 	// Semaforo do disco
 	semaphore_t s_disk;
 
-	// Tarefas esperando disco
+	// Tarefas esperando disco e requisicoes
 	task_t* suspendedQueue;
+	disk_request* requestQueue;
 
 	// Parametros do disco
 	unsigned int numBlocks;

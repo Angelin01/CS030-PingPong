@@ -718,16 +718,59 @@ int diskdriver_init(int* numBlocks, int* blockSize) {
     #endif // DEBUG
 
     // Consulta o disco em si
-    if(disk->numBlocks = disk_cmd(DISK_CMD_DISKSIZE, 0, 0) < 0){
+    if(disk.numBlocks = disk_cmd(DISK_CMD_DISKSIZE, 0, 0) < 0) {
         return(-1);
     }
-    if(disk->blockSize = disk_cmd(DISK_CMD_BLOCKSIZE, 0, 0) < 0){
+    if(disk.blockSize = disk_cmd(DISK_CMD_BLOCKSIZE, 0, 0) < 0) {
+        return(-1);
+    }
+
+    // Semaforo(mutex) para controle do disco
+    if(!sem_create(&disk.s_disk, 1)) {
         return(-1);
     }
 
     // Seta os valores
-	*numBlocks = disk->numBlocks;
-	*blockSize = disk->blockSize;
+	*numBlocks = disk.numBlocks;
+	*blockSize = disk.blockSize;
 
 	return(0);
 }
+
+// Para criar requests. Retorna 0 em sucesso e -1 em erro
+int disk_request_create(disk_request* request, task_t* task, int operation, void* buffer, int block) {
+    if(!request || !task ||
+       (operation != DISK_CMD_READ && operation != DISK_CMD_WRITE) ||
+       !buffer || block < 0) {
+        return(-1);
+    }
+
+    // Seta parametros da request
+    request->task = task;
+    request->operation = operation;
+    request->buffer = buffer;
+    request->block = block;
+
+    // Fila começa como null
+    request->prev = NULL;
+    request->next = NULL;
+
+    return(0);
+}
+
+int disk_block_read(int block, void *buffer) {
+    if(block < 0 || !buffer) {
+        return(-1);
+    }
+
+    #ifdef DEBUG
+    printf("Task %d lendo bloco %d do disco\n", currentTask->tid, block);
+    #endif // DEBUG
+
+    sem_down(disk.s_disk);
+
+
+
+}
+
+int disk_block_write(int block, void *buffer){}
