@@ -745,17 +745,14 @@ void diskManager_body(void* arg) {
 }
 
 int diskdriver_init(int* numBlocks, int* blockSize) {
-    int test;
-    printf("Debug 1\n");
     if(!numBlocks || !blockSize) {
         return(-1);
     }
 
     // Iniciliza disco
-    if(disk_cmd(DISK_CMD_INIT, 0, 0) < 0) {
+    if(disk_cmd(DISK_CMD_INIT, 0, 0) != 0) {
         return(-1);
     }
-    printf("Debug 2\n");
     // Consulta o disco em si
     if((disk.numBlocks = disk_cmd(DISK_CMD_DISKSIZE, 0, 0)) < 0) {
         return(-1);
@@ -763,14 +760,11 @@ int diskdriver_init(int* numBlocks, int* blockSize) {
     if((disk.blockSize = disk_cmd(DISK_CMD_BLOCKSIZE, 0, 0)) < 0) {
         return(-1);
     }
-    printf("Debug 3\n");
     // Semaforo(mutex) para controle do disco
-    test = sem_create(&disk.s_disk, 1);
-    if(!test) {
-        printf("%d\n", test);
+
+    if(sem_create(&disk.s_disk, 1) != 0) {
         return(-1);
     }
-    printf("Debug 4\n");
     // Seta os valores
 	*numBlocks = disk.numBlocks;
 	*blockSize = disk.blockSize;
