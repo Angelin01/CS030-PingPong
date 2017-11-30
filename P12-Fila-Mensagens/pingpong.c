@@ -117,12 +117,9 @@ int task_create(task_t *task, void (*start_func)(void *), void *arg) {
 
     // Seta task principal
     task->tmain = &mainTask;
-    if(arg) { // Chek se tem que passar argumento ou nao
-        makecontext(&(task->tContext), (void*) start_func, 1, arg);
-    }
-    else {
-        makecontext(&(task->tContext), (void*) start_func, 0);
-    }
+
+    makecontext(&(task->tContext), (void*) start_func, 1, arg);
+
 
     queue_append((queue_t**)&taskQueue, (queue_t*)task);
     task->currentQueue = &taskQueue; // Para suspend no futuro
